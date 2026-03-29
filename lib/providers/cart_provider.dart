@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/product_model.dart'; // 1. IMPORT YOUR NEW MODEL
 
 // A small model to hold the product and how many the user wants
 class CartItem {
-  final Map<String, dynamic> product;
+  final Product product; // 2. CHANGED FROM Map<String, dynamic> TO Product
   int quantity;
 
   CartItem({required this.product, this.quantity = 1});
@@ -19,22 +20,25 @@ class CartProvider with ChangeNotifier {
   double get totalAmount {
     var total = 0.0;
     _items.forEach((key, cartItem) {
-      total += cartItem.product['price'] * cartItem.quantity;
+      // 3. UPDATED TO OBJECT SYNTAX (cartItem.product.price)
+      total += cartItem.product.price * cartItem.quantity;
     });
     return total;
   }
 
-  void addItem(Map<String, dynamic> product) {
-    if (_items.containsKey(product['id'])) {
+  // 4. CHANGED PARAMETER TO EXPECT A Product OBJECT
+  void addItem(Product product) {
+    // 5. UPDATED ALL product['id'] LOOKUPS TO product.id
+    if (_items.containsKey(product.id)) {
       // If it's already in the cart, just increase the quantity
       _items.update(
-        product['id'],
+        product.id,
             (existingItem) => CartItem(product: existingItem.product, quantity: existingItem.quantity + 1),
       );
     } else {
       // If it's new, add it to the cart
       _items.putIfAbsent(
-        product['id'],
+        product.id,
             () => CartItem(product: product),
       );
     }

@@ -9,7 +9,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
-    final cartItems = cart.items; // Map<String, CartItem>
+    final cartItems = cart.items;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
@@ -18,13 +18,14 @@ class CartScreen extends StatelessWidget {
         centerTitle: true,
       ),
 
-      // ── EMPTY STATE (your original UI, untouched) ──
+      // ── EMPTY STATE ──
       body: cartItems.isEmpty
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.withOpacity(0.5)),
+            // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
+            Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.withValues(alpha: 0.5)),
             const SizedBox(height: 20),
             const Text(
               "Your cart is empty",
@@ -63,9 +64,12 @@ class CartScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final productId = cartItems.keys.elementAt(index);
                 final cartItem = cartItems.values.elementAt(index);
+
                 final product = cartItem.product;
                 final qty = cartItem.quantity;
-                final double price = (product['price'] as num).toDouble();
+
+                // 1. FIXED SYNTAX: Changed product['price'] to product.price
+                final double price = product.price.toDouble();
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -77,15 +81,19 @@ class CartScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      // Product Image
+                      // 2. FIXED IMAGE: Swapped Image.asset for Image.network + fallback
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          product['image'],
+                        child: product.imageUrl.isNotEmpty
+                            ? Image.network(
+                          product.imageUrl,
                           width: 70,
                           height: 70,
                           fit: BoxFit.cover,
-                        ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.broken_image, color: Colors.grey)),
+                        )
+                            : Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.image_not_supported, color: Colors.grey)),
                       ),
                       const SizedBox(width: 12),
 
@@ -94,13 +102,16 @@ class CartScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // 3. FIXED SYNTAX: Changed product['name'] to product.name
                             Text(
-                              product['name'],
+                              product.name,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                                 color: AppColors.primaryGreen,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -193,7 +204,8 @@ class CartScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 16, color: color),

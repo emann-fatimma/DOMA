@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import '../constants.dart'; // Import your hex codes
-import '../screens/product_detail_screen.dart'; // 1. IMPORT THE DETAIL SCREEN
+import '../models/product_model.dart'; // 1. IMPORT YOUR NEW MODEL
+import '../screens/product_detail_screen.dart';
 
 class ProductCard extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final Product product; // 2. CHANGE TYPE FROM Map TO Product
 
   const ProductCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
-    // 2. WRAP WITH INKWELL FOR TAP DETECTION
+    print("FULL IMAGE PATH IS: ${product.imageUrl}"); // ADD THIS LINE
     return InkWell(
       onTap: () {
-        // 3. NAVIGATE TO THE DETAIL SCREEN
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -20,7 +20,7 @@ class ProductCard extends StatelessWidget {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(15), // Keeps the ripple effect inside the rounded corners
+      borderRadius: BorderRadius.circular(15),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -36,15 +36,28 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Product Image
+            // 3. UPDATED PRODUCT IMAGE (Fetches from the internet)
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Image.asset(
-                  product['image'],
-                  fit: BoxFit.cover,
+                child: product.imageUrl.isNotEmpty
+                    ? Image.network(
+                    product.imageUrl.contains('https://res.cloudinary.com')
+                        ? product.imageUrl.split('https://doma-backend.onrender.com').last
+                        : product.imageUrl,
+                    fit: BoxFit.cover,
                   width: double.infinity,
-                ),
+                  // Shows a spinner while the image downloads from Render
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  // Shows a broken image icon if the URL fails
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(child: Icon(Icons.broken_image, color: Colors.grey));
+                  },
+                )
+                    : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
               ),
             ),
 
@@ -53,15 +66,13 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 2. Category Name (Small & subtle)
-                  Text(
-                    product['category'].toUpperCase(),
-                    style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
-                  ),
+                  // Note: I temporarily removed the 'category' text because
+                  // we didn't add category to the Product dart model earlier.
+                  // We can easily add it back later if you need it!
 
-                  // 3. Product Name (Dark Green)
+                  // 4. PRODUCT NAME (Using object syntax)
                   Text(
-                    product['name'],
+                    product.name,
                     style: const TextStyle(
                       color: AppColors.primaryGreen,
                       fontWeight: FontWeight.bold,
@@ -73,12 +84,12 @@ class ProductCard extends StatelessWidget {
 
                   const SizedBox(height: 4),
 
-                  // 4. Price and Add Button (Orange)
+                  // 5. PRICE AND ADD BUTTON
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Rs. ${product['price']}",
+                        "Rs. ${product.price}", // Using object syntax
                         style: const TextStyle(
                           color: AppColors.accentOrange,
                           fontWeight: FontWeight.bold,
