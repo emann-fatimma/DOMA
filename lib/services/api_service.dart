@@ -13,7 +13,7 @@ class ApiService {
         Uri.parse('$baseUrl/products?depth=2'),
       );
 
-      print("🌐 API URL: ${response.request?.url}");
+      // print("🌐 API URL: ${response.request?.url}");
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

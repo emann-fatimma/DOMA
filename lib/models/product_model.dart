@@ -20,7 +20,7 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    print("🔍 FULL PRODUCT JSON: $json");
+    // print("🔍 FULL PRODUCT JSON: $json");
 
     final pricing = json['pricing'] ?? {};
     final inventory = json['inventory'] ?? {};
@@ -32,7 +32,7 @@ class Product {
     String sName = 'Unknown Store';
     final vendorData = json['vendor'];
 
-    print("🔍 RAW VENDOR DATA: $vendorData");
+    // print("🔍 RAW VENDOR DATA: $vendorData");
 
     if (vendorData is Map) {
       // ✅ Handle populated vendor object
@@ -43,14 +43,14 @@ class Product {
           vendorData['username']?.toString() ??
           'Store Name Missing';
 
-      print("✅ Vendor object parsed. Store Name: $sName");
+      // print("✅ Vendor object parsed. Store Name: $sName");
 
     } else if (vendorData is String) {
       // ❌ Backend did NOT populate relationship
-      print("❌ Vendor is still ID (NO DEPTH): $vendorData");
+      // print("❌ Vendor is still ID (NO DEPTH): $vendorData");
       sName = 'Unknown Store';
     } else {
-      print("⚠️ Vendor is NULL or unexpected format");
+      // print("⚠️ Vendor is NULL or unexpected format");
     }
 
     // =========================

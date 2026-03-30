@@ -10,7 +10,7 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("FULL IMAGE PATH IS: ${product.imageUrl}"); // ADD THIS LINE
+    // print("FULL IMAGE PATH IS: ${product.imageUrl}"); // ADD THIS LINE
     return InkWell(
       onTap: () {
         Navigator.push(
