@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'screens/main_screen.dart';
 import 'screens/login-screen.dart';
 import 'constants.dart';
+
 import 'providers/cart_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
 
 void main() {
   runApp(
-    // 3. Changed to MultiProvider to support both Cart and Auth
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => CartProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (context) => ProductProvider()..fetchProducts(),
+        ),
       ],
       child: const DomaApp(),
     ),
@@ -40,9 +45,11 @@ class DomaApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      // 4. Changed home to LoginScreen to start the Auth flow
+
+      // start with login (auth flow)
       home: const LoginScreen(),
-      // 5. Added routes for easy navigation after login
+
+      // routes for navigation
       routes: {
         '/main': (context) => const MainScreen(),
         '/login': (context) => const LoginScreen(),

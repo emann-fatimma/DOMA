@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
-import '../models/product_model.dart'; // 1. IMPORT YOUR MODEL
+import '../models/product_model.dart';
 
 class ProductDetailScreen extends StatelessWidget {
-  final Product product; // 2. CHANGE FROM Map TO Product
+  final Product product;
 
   const ProductDetailScreen({super.key, required this.product});
 
@@ -33,15 +33,13 @@ class ProductDetailScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // 1. TOP HALF: Updated to Network Image
+          // 1. TOP HALF: Image
           SizedBox(
             height: size.height * 0.55,
             width: double.infinity,
             child: product.imageUrl.isNotEmpty
                 ? Image.network(
-              product.imageUrl.contains('https://res.cloudinary.com')
-                  ? product.imageUrl.split('https://doma-backend.onrender.com').last
-                  : product.imageUrl,
+              product.imageUrl,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
@@ -81,23 +79,33 @@ class ProductDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Category and Rating
+                    // Category and Rating (Strictly bounds the text)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "FURNITURE", // Placeholder: We didn't add category to the model yet!
-                          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                        Expanded(
+                          child: Text(
+                            product.category.toUpperCase(),
+                            style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        Row(
-                          children: [
-                            const Icon(Icons.star, color: AppColors.accentOrange, size: 20),
-                            const SizedBox(width: 5),
-                            Text(
-                              product.rating.toStringAsFixed(1), // Object syntax
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                          ],
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star, color: AppColors.accentOrange, size: 20),
+                              const SizedBox(width: 5),
+                              Text(
+                                product.rating.toStringAsFixed(1),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         )
                       ],
                     ),
@@ -105,13 +113,12 @@ class ProductDetailScreen extends StatelessWidget {
 
                     // Title
                     Text(
-                      product.name, // Object syntax
+                      product.name,
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                     ),
                     const SizedBox(height: 5),
 
                     // Vendor Name
-                    // Vendor Name (Now dynamic from Backend)
                     Text(
                       "Sold by: ${product.storeName}",
                       style: const TextStyle(
@@ -122,14 +129,18 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
 
-                    // Price and Stock Status
+                    // Price and Stock Status — FIXED: Flexible prevents overflow
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "Rs. ${product.price}", // Object syntax
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.accentOrange),
+                        Flexible(
+                          child: Text(
+                            "Rs. ${product.price}",
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.accentOrange),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
@@ -137,7 +148,7 @@ class ProductDetailScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            product.isAvailable ? "In Stock" : "Out of Stock", // Object syntax
+                            product.isAvailable ? "In Stock" : "Out of Stock",
                             style: TextStyle(
                               color: product.isAvailable ? Colors.green : Colors.red,
                               fontWeight: FontWeight.bold,
@@ -155,7 +166,7 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      product.description.isNotEmpty ? product.description : "No description available for this product.", // Object syntax
+                      product.description.isNotEmpty ? product.description : "No description available for this product.",
                       style: const TextStyle(color: Colors.grey, height: 1.5),
                     ),
                     const SizedBox(height: 35),
@@ -176,7 +187,6 @@ class ProductDetailScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // AR Button (Outlined)
             Expanded(
               flex: 1,
               child: OutlinedButton(
@@ -195,12 +205,10 @@ class ProductDetailScreen extends StatelessWidget {
             ),
             const SizedBox(width: 15),
 
-            // Add to Cart Button (Elevated)
             Expanded(
               flex: 2,
               child: ElevatedButton(
                 onPressed: product.isAvailable ? () {
-                  // WARNING: THIS WILL LIKELY BREAK UNTIL WE UPDATE CART PROVIDER!
                   Provider.of<CartProvider>(context, listen: false).addItem(product);
 
                   ScaffoldMessenger.of(context).showSnackBar(

@@ -1,3 +1,220 @@
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import '../constants.dart';
+// import '../providers/cart_provider.dart';
+//
+// class CartScreen extends StatelessWidget {
+//   const CartScreen({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final cart = context.watch<CartProvider>();
+//     final cartItems = cart.items;
+//
+//     return Scaffold(
+//       backgroundColor: AppColors.backgroundOffWhite,
+//       appBar: AppBar(
+//         title: const Text("My Cart"),
+//         centerTitle: true,
+//       ),
+//
+//       // ── EMPTY STATE ──
+//       body: cartItems.isEmpty
+//           ? Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
+//             Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.withValues(alpha: 0.5)),
+//             const SizedBox(height: 20),
+//             const Text(
+//               "Your cart is empty",
+//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+//             ),
+//             const SizedBox(height: 10),
+//             const Text(
+//               "Looks like you haven't added\nanything to your cart yet.",
+//               textAlign: TextAlign.center,
+//               style: TextStyle(color: Colors.grey),
+//             ),
+//             const SizedBox(height: 30),
+//             ElevatedButton(
+//               onPressed: () {},
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: AppColors.accentOrange,
+//                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//               ),
+//               child: const Text(
+//                 "Start Shopping",
+//                 style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+//               ),
+//             )
+//           ],
+//         ),
+//       )
+//
+//       // ── FILLED STATE ──
+//           : Column(
+//         children: [
+//           Expanded(
+//             child: ListView.builder(
+//               padding: const EdgeInsets.all(15),
+//               itemCount: cartItems.length,
+//               itemBuilder: (context, index) {
+//                 final productId = cartItems.keys.elementAt(index);
+//                 final cartItem = cartItems.values.elementAt(index);
+//
+//                 final product = cartItem.product;
+//                 final qty = cartItem.quantity;
+//
+//                 // 1. FIXED SYNTAX: Changed product['price'] to product.price
+//                 final double price = product.price.toDouble();
+//
+//                 return Container(
+//                   margin: const EdgeInsets.only(bottom: 12),
+//                   padding: const EdgeInsets.all(12),
+//                   decoration: BoxDecoration(
+//                     color: Colors.white,
+//                     borderRadius: BorderRadius.circular(15),
+//                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+//                   ),
+//                   child: Row(
+//                     children: [
+//                       // 2. FIXED IMAGE: Swapped Image.asset for Image.network + fallback
+//                       ClipRRect(
+//                         borderRadius: BorderRadius.circular(10),
+//                         child: product.imageUrl.isNotEmpty
+//                             ? Image.network(
+//                           product.imageUrl,
+//                           width: 70,
+//                           height: 70,
+//                           fit: BoxFit.cover,
+//                           errorBuilder: (context, error, stackTrace) =>
+//                               Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.broken_image, color: Colors.grey)),
+//                         )
+//                             : Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.image_not_supported, color: Colors.grey)),
+//                       ),
+//                       const SizedBox(width: 12),
+//
+//                       // Name + Price
+//                       Expanded(
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             // 3. FIXED SYNTAX: Changed product['name'] to product.name
+//                             Text(
+//                               product.name,
+//                               style: const TextStyle(
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 15,
+//                                 color: AppColors.primaryGreen,
+//                               ),
+//                               maxLines: 1,
+//                               overflow: TextOverflow.ellipsis,
+//                             ),
+//                             const SizedBox(height: 4),
+//                             Text(
+//                               "Rs. ${(price * qty).toStringAsFixed(0)}",
+//                               style: const TextStyle(
+//                                 color: AppColors.accentOrange,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//
+//                       // Qty Controls + Delete
+//                       Row(
+//                         children: [
+//                           _qtyButton(
+//                             icon: qty == 1 ? Icons.delete_outline : Icons.remove,
+//                             onTap: () => cart.updateQuantity(productId, qty - 1),
+//                             color: qty == 1 ? Colors.red : AppColors.primaryGreen,
+//                           ),
+//                           Padding(
+//                             padding: const EdgeInsets.symmetric(horizontal: 10),
+//                             child: Text(
+//                               "$qty",
+//                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+//                             ),
+//                           ),
+//                           _qtyButton(
+//                             icon: Icons.add,
+//                             onTap: () => cart.updateQuantity(productId, qty + 1),
+//                             color: AppColors.primaryGreen,
+//                           ),
+//                         ],
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
+//           ),
+//
+//           // ── TOTAL + CHECKOUT BAR ──
+//           Container(
+//             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+//             decoration: const BoxDecoration(
+//               color: Colors.white,
+//               boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)],
+//             ),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text("Total", style: TextStyle(color: Colors.grey)),
+//                     Text(
+//                       "Rs. ${cart.totalAmount.toStringAsFixed(0)}",
+//                       style: const TextStyle(
+//                         fontSize: 20,
+//                         fontWeight: FontWeight.bold,
+//                         color: AppColors.primaryGreen,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//                 ElevatedButton(
+//                   onPressed: () {},
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: AppColors.accentOrange,
+//                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+//                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+//                   ),
+//                   child: const Text(
+//                     "Checkout",
+//                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _qtyButton({required IconData icon, required VoidCallback onTap, required Color color}) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: const EdgeInsets.all(6),
+//         decoration: BoxDecoration(
+//           // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
+//           color: color.withValues(alpha: 0.1),
+//           shape: BoxShape.circle,
+//         ),
+//         child: Icon(icon, size: 16, color: color),
+//       ),
+//     );
+//   }
+// }
+
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
@@ -24,7 +241,6 @@ class CartScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
             Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.withValues(alpha: 0.5)),
             const SizedBox(height: 20),
             const Text(
@@ -39,7 +255,10 @@ class CartScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                // Optional: Navigate back to home
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accentOrange,
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -67,8 +286,6 @@ class CartScreen extends StatelessWidget {
 
                 final product = cartItem.product;
                 final qty = cartItem.quantity;
-
-                // 1. FIXED SYNTAX: Changed product['price'] to product.price
                 final double price = product.price.toDouble();
 
                 return Container(
@@ -81,7 +298,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      // 2. FIXED IMAGE: Swapped Image.asset for Image.network + fallback
+                      // Product Image
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: product.imageUrl.isNotEmpty
@@ -102,7 +319,6 @@ class CartScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 3. FIXED SYNTAX: Changed product['name'] to product.name
                             Text(
                               product.name,
                               style: const TextStyle(
@@ -204,7 +420,6 @@ class CartScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
           color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
