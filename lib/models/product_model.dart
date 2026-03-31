@@ -9,6 +9,7 @@ class Product {
   final String storeName;
   final String category;
   final bool isFeatured;
+  final int quantity;
 
   Product({
     required this.id,
@@ -21,6 +22,7 @@ class Product {
     required this.storeName,
     required this.category,
     required this.isFeatured,
+    required this.quantity,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -36,13 +38,17 @@ class Product {
 
     String imgUrl = '';
     if (json['images'] != null && json['images'] is List && (json['images'] as List).isNotEmpty) {
-      final imageMedia = json['images'][0]['image'];
-      if (imageMedia is Map && imageMedia['url'] != null) {
-        String rawUrl = imageMedia['url'];
+      final firstImageEntry = json['images'][0];
+
+      final imageField = firstImageEntry['image'];
+
+      if (imageField is Map && imageField['url'] != null) {
+        String rawUrl = imageField['url'];
         imgUrl = rawUrl.startsWith('http') ? rawUrl : "https://doma-backend.onrender.com$rawUrl";
+      } else if (imageField is String) {
+        imgUrl = "https://doma-backend.onrender.com/media/$imageField";
       }
     }
-
     // 🔥 ULTRA-SAFE CATEGORY EXTRACTOR
     String safeCategory = 'Uncategorized';
     try {
@@ -66,17 +72,21 @@ class Product {
       // Fails silently and keeps 'Uncategorized'
     }
 
+    final int stockCount = (inventory['quantity'] is num)
+        ? (inventory['quantity'] as num).toInt()
+        : 0;
     return Product(
       id: json['id']?.toString() ?? '',
       name: json['title']?.toString() ?? 'Unknown Product',
       description: json['Description']?.toString() ?? '',
       price: pricing['price'] ?? 0,
       imageUrl: imgUrl,
-      isAvailable: (inventory['quantity'] ?? 0) > 0,
+      isAvailable: stockCount > 0,
       rating: ratingInfo['average'] ?? 0,
       storeName: sName,
       category: safeCategory,
       isFeatured: json['isFeatured'] ?? false,
+        quantity: stockCount
     );
   }
 }

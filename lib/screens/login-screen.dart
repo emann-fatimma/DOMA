@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../constants.dart';
+import '../screens/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -116,6 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
+              // Inside LoginScreen
               const SizedBox(height: 20),
 
               // Google Login Placeholder (We'll integrate this next!)
@@ -134,6 +136,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignupScreen()),
+                  );
+                },
+                child: const Text("Don't have an account? Sign Up"),
+              )
             ],
           ),
         ),

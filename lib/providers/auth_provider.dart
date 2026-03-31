@@ -118,6 +118,80 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> register(String name, String email, String password) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://doma-backend.onrender.com/api/customer/register'), // Make sure this matches your route path
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'Name': name, // Capital 'N' as per your backend
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 && data['success'] == true) {
+        // Success! Save the token and user data immediately
+        final token = data['token'];
+        await _storage.write(key: 'jwt_token', value: token);
+
+        // Use our existing model to parse the user
+        _user = UserModel.fromJson(data, token);
+
+        _isLoading = false;
+        notifyListeners();
+        return null; // Return null for no error
+      } else {
+        _isLoading = false;
+        notifyListeners();
+        return data['error'] ?? "Registration failed";
+      }
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return "Connection error. Please try again.";
+    }
+  }
+
+  Future<void> fetchCartFromBackend(String userId) async {
+    final token = await _storage.read(key: 'jwt_token');
+
+    // We filter the carts collection by the specific userId
+    final url = Uri.parse(
+        'https://doma-backend.onrender.com/api/carts?where[userId][equals]=$userId'
+    );
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'JWT $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Payload returns an object with a "docs" list
+        if (data['docs'] != null && data['docs'].isNotEmpty) {
+          final cartData = data['docs'][0]; // Get the first cart found
+          final List items = cartData['items'] ?? [];
+
+          // Update your local _items map here with the data from 'items'
+          // ... loop through items and add to cart ...
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      print("Fetch cart error: $e");
+    }
+  }
+
   void logout() async {
     _user = null;
     await _storage.delete(key: 'jwt_token');

@@ -3,6 +3,7 @@ import '../constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product_model.dart';
+import '../providers/wishlist_provider.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -11,7 +12,9 @@ class ProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wishlist = context.watch<WishlistProvider>();
     final size = MediaQuery.of(context).size;
+    final bool isSaved = wishlist.isFavorite(product.id);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
@@ -25,8 +28,11 @@ class ProductDetailScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite_border, color: AppColors.primaryGreen),
-            onPressed: () {},
+            icon: Icon(
+              isSaved ? Icons.favorite : Icons.favorite_border,
+              color: isSaved ? Colors.red : Colors.grey,
+            ),
+            onPressed: () => wishlist.toggleWishlist(product),
           ),
           const SizedBox(width: 10),
         ],

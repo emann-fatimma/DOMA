@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../providers/auth_provider.dart';
 import '../screens/edit_profile.dart';
+import '../screens/wishlist_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -66,7 +67,11 @@ class ProfileScreen extends StatelessWidget {
                     },
                   ),
                   _buildProfileOption(Icons.shopping_bag_outlined, "My Orders"),
-                  _buildProfileOption(Icons.favorite_border, "Wishlist"),
+                  _buildProfileOption(Icons.favorite_border,
+                    "Wishlist",
+                    onTap: () {
+                      Navigator.pushNamed(context, '/wishlist');
+                    },),
 
                   const Divider(height: 30),
 

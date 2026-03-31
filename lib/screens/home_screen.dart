@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../widgets/product_card.dart';
 import '../constants.dart';
 import '../providers/product_provider.dart';
+import 'wishlist_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -176,11 +177,9 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.favorite_border, color: Colors.white),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/wishlist');
+              },
           ),
         ],
       ),
