@@ -2,12 +2,15 @@
 // import 'package:provider/provider.dart';
 // import '../constants.dart';
 // import '../providers/cart_provider.dart';
+// import '../models/product_model.dart';
+// import '../screens/product_detail_screen.dart';
 //
 // class CartScreen extends StatelessWidget {
 //   const CartScreen({super.key});
 //
 //   @override
 //   Widget build(BuildContext context) {
+//     // We use context.watch to rebuild the screen whenever the cart changes
 //     final cart = context.watch<CartProvider>();
 //     final cartItems = cart.items;
 //
@@ -24,12 +27,17 @@
 //         child: Column(
 //           mainAxisAlignment: MainAxisAlignment.center,
 //           children: [
-//             // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
-//             Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey.withValues(alpha: 0.5)),
+//             Icon(Icons.shopping_cart_outlined,
+//                 size: 100,
+//                 color: Colors.grey.withAlpha(128)),
 //             const SizedBox(height: 20),
 //             const Text(
 //               "Your cart is empty",
-//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+//               style: TextStyle(
+//                   fontSize: 22,
+//                   fontWeight: FontWeight.bold,
+//                   color: AppColors.primaryGreen
+//               ),
 //             ),
 //             const SizedBox(height: 10),
 //             const Text(
@@ -39,7 +47,9 @@
 //             ),
 //             const SizedBox(height: 30),
 //             ElevatedButton(
-//               onPressed: () {},
+//               onPressed: () {
+//                 Navigator.popUntil(context, (route) => route.isFirst);
+//               },
 //               style: ElevatedButton.styleFrom(
 //                 backgroundColor: AppColors.accentOrange,
 //                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -62,92 +72,127 @@
 //               padding: const EdgeInsets.all(15),
 //               itemCount: cartItems.length,
 //               itemBuilder: (context, index) {
+//                 // 🔥 VARIABLES DEFINED INSIDE BUILDER SCOPE
 //                 final productId = cartItems.keys.elementAt(index);
 //                 final cartItem = cartItems.values.elementAt(index);
 //
-//                 final product = cartItem.product;
-//                 final qty = cartItem.quantity;
-//
-//                 // 1. FIXED SYNTAX: Changed product['price'] to product.price
+//                 final Product product = cartItem.product;
+//                 final int qty = cartItem.quantity;
 //                 final double price = product.price.toDouble();
 //
-//                 return Container(
-//                   margin: const EdgeInsets.only(bottom: 12),
-//                   padding: const EdgeInsets.all(12),
-//                   decoration: BoxDecoration(
-//                     color: Colors.white,
-//                     borderRadius: BorderRadius.circular(15),
-//                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
-//                   ),
-//                   child: Row(
-//                     children: [
-//                       // 2. FIXED IMAGE: Swapped Image.asset for Image.network + fallback
-//                       ClipRRect(
-//                         borderRadius: BorderRadius.circular(10),
-//                         child: product.imageUrl.isNotEmpty
-//                             ? Image.network(
-//                           product.imageUrl,
-//                           width: 70,
-//                           height: 70,
-//                           fit: BoxFit.cover,
-//                           errorBuilder: (context, error, stackTrace) =>
-//                               Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.broken_image, color: Colors.grey)),
-//                         )
-//                             : Container(width: 70, height: 70, color: Colors.grey[200], child: const Icon(Icons.image_not_supported, color: Colors.grey)),
+//                 return GestureDetector(
+//                   onTap: () {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (context) => ProductDetailScreen(product: product),
 //                       ),
-//                       const SizedBox(width: 12),
+//                     );
+//                   },
+//                   child: Container(
+//                     margin: const EdgeInsets.only(bottom: 12),
+//                     padding: const EdgeInsets.all(12),
+//                     decoration: BoxDecoration(
+//                       color: Colors.white,
+//                       borderRadius: BorderRadius.circular(15),
+//                       boxShadow: const [
+//                         BoxShadow(color: Colors.black12, blurRadius: 5)
+//                       ],
+//                     ),
+//                     child: Row(
+//                       children: [
+//                         // Product Image
+//                         ClipRRect(
+//                           borderRadius: BorderRadius.circular(10),
+//                           child: product.imageUrl.isNotEmpty
+//                               ? Image.network(
+//                               product.imageUrl,
+//                               key: ValueKey(product.imageUrl), // Add this
+//                               width: 70,
+//                               height: 70,
+//                               fit: BoxFit.cover,
+//                             errorBuilder: (context, error, stackTrace) =>
+//                                 Container(
+//                                     width: 70,
+//                                     height: 70,
+//                                     color: Colors.grey[200],
+//                                     child: const Icon(Icons.broken_image, color: Colors.grey)
+//                                 ),
+//                           )
+//                               : Container(
+//                               width: 70,
+//                               height: 70,
+//                               color: Colors.grey[200],
+//                               child: const Icon(Icons.image_not_supported, color: Colors.grey)
+//                           ),
+//                         ),
+//                         const SizedBox(width: 12),
 //
-//                       // Name + Price
-//                       Expanded(
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                         // Name + Price
+//                         Expanded(
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                                 product.name,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 15,
+//                                   color: AppColors.primaryGreen,
+//                                 ),
+//                                 maxLines: 1,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 "Rs. ${(price * qty).toStringAsFixed(0)}",
+//                                 style: const TextStyle(
+//                                   color: AppColors.accentOrange,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//
+//                         // Qty Controls
+//                         Row(
 //                           children: [
-//                             // 3. FIXED SYNTAX: Changed product['name'] to product.name
-//                             Text(
-//                               product.name,
-//                               style: const TextStyle(
-//                                 fontWeight: FontWeight.bold,
-//                                 fontSize: 15,
-//                                 color: AppColors.primaryGreen,
-//                               ),
-//                               maxLines: 1,
-//                               overflow: TextOverflow.ellipsis,
+//                             _qtyButton(
+//                               icon: qty == 1 ? Icons.delete_outline : Icons.remove,
+//                               onTap: () => cart.updateQuantity(productId, qty - 1),
+//                               color: qty == 1 ? Colors.red : AppColors.primaryGreen,
 //                             ),
-//                             const SizedBox(height: 4),
-//                             Text(
-//                               "Rs. ${(price * qty).toStringAsFixed(0)}",
-//                               style: const TextStyle(
-//                                 color: AppColors.accentOrange,
-//                                 fontWeight: FontWeight.bold,
+//                             Padding(
+//                               padding: const EdgeInsets.symmetric(horizontal: 10),
+//                               child: Text(
+//                                 "$qty",
+//                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
 //                               ),
+//                             ),
+//                             _qtyButton(
+//                               icon: Icons.add,
+//                               onTap: () {
+//                                 // 🔥 INVENTORY WARNING CHECK
+//                                 if (qty >= product.quantity) {
+//                                   scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+//                                   scaffoldMessengerKey.currentState?.showSnackBar(
+//                                     SnackBar(
+//                                       content: Text("Only ${product.quantity} items available!"),
+//                                       backgroundColor: Colors.orange.shade900,
+//                                       behavior: SnackBarBehavior.floating,
+//                                     ),
+//                                   );
+//                                 } else {
+//                                   cart.updateQuantity(productId, qty + 1);
+//                                 }
+//                               },
+//                               color: AppColors.primaryGreen,
 //                             ),
 //                           ],
 //                         ),
-//                       ),
-//
-//                       // Qty Controls + Delete
-//                       Row(
-//                         children: [
-//                           _qtyButton(
-//                             icon: qty == 1 ? Icons.delete_outline : Icons.remove,
-//                             onTap: () => cart.updateQuantity(productId, qty - 1),
-//                             color: qty == 1 ? Colors.red : AppColors.primaryGreen,
-//                           ),
-//                           Padding(
-//                             padding: const EdgeInsets.symmetric(horizontal: 10),
-//                             child: Text(
-//                               "$qty",
-//                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//                             ),
-//                           ),
-//                           _qtyButton(
-//                             icon: Icons.add,
-//                             onTap: () => cart.updateQuantity(productId, qty + 1),
-//                             color: AppColors.primaryGreen,
-//                           ),
-//                         ],
-//                       ),
-//                     ],
+//                       ],
+//                     ),
 //                   ),
 //                 );
 //               },
@@ -179,7 +224,9 @@
 //                   ],
 //                 ),
 //                 ElevatedButton(
-//                   onPressed: () {},
+//                   onPressed: () {
+//                     // TODO: Proceed to Checkout
+//                   },
 //                   style: ElevatedButton.styleFrom(
 //                     backgroundColor: AppColors.accentOrange,
 //                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
@@ -204,8 +251,7 @@
 //       child: Container(
 //         padding: const EdgeInsets.all(6),
 //         decoration: BoxDecoration(
-//           // FIXED DEPRECATION WARNING: Changed withOpacity to withValues
-//           color: color.withValues(alpha: 0.1),
+//           color: color.withOpacity(0.1),
 //           shape: BoxShape.circle,
 //         ),
 //         child: Icon(icon, size: 16, color: color),
@@ -215,12 +261,14 @@
 // }
 
 
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../providers/cart_provider.dart';
 import '../models/product_model.dart';
 import '../screens/product_detail_screen.dart';
+import 'checkout_screen.dart'; // ✅ Added the Checkout Screen import
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -323,11 +371,11 @@ class CartScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           child: product.imageUrl.isNotEmpty
                               ? Image.network(
-                              product.imageUrl,
-                              key: ValueKey(product.imageUrl), // Add this
-                              width: 70,
-                              height: 70,
-                              fit: BoxFit.cover,
+                            product.imageUrl,
+                            key: ValueKey(product.imageUrl), // Add this
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
                                     width: 70,
@@ -442,7 +490,13 @@ class CartScreen extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: Proceed to Checkout
+                    // ✅ Pushes the Checkout Screen on top of the Cart Screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CheckoutScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accentOrange,

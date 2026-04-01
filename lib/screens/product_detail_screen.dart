@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
@@ -30,7 +31,8 @@ class ProductDetailScreen extends StatelessWidget {
           IconButton(
             icon: Icon(
               isSaved ? Icons.favorite : Icons.favorite_border,
-              color: isSaved ? Colors.red : Colors.grey,
+              // MODIFIED THIS LINE: Use accentOrange for both states
+              color: AppColors.accentOrange,
             ),
             onPressed: () => wishlist.toggleWishlist(product),
           ),
