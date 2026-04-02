@@ -29,6 +29,13 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
+  void clearCartMemory() {
+    _items.clear();
+    _backendCartId = null;
+    notifyListeners();
+    debugPrint("🧹 Cart Provider memory wiped for new session.");
+  }
+
   // 1. Initial Fetch - Call this in MainScreen or after Login
   // Future<void> fetchCartFromBackend(String userId) async {
   //   final token = await _storage.read(key: 'jwt_token');

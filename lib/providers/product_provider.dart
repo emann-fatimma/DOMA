@@ -146,4 +146,36 @@ class ProductProvider with ChangeNotifier {
     // When clearing, you might want to fetch all products again
     fetchProducts();
   }
+
+  // Inside ProductProvider
+  List<Product> _vendorProducts = [];
+  List<Product> get vendorProducts => _vendorProducts;
+
+  Future<void> fetchProductsByVendor(String vendorId) async {
+    _isLoading = true;
+    _vendorProducts = []; // Clear old data
+    notifyListeners();
+
+    try {
+      // 🔥 No custom route needed, just standard Payload filtering
+      final url = Uri.parse(
+          'https://doma-backend.onrender.com/api/products?where[vendor][equals]=$vendorId'
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List docs = data['docs'] ?? [];
+
+        _vendorProducts = docs.map((item) => Product.fromJson(item)).toList();
+      }
+    } catch (e) {
+      debugPrint("Error fetching vendor products: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
 }

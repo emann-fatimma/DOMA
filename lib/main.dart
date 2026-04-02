@@ -1,3 +1,4 @@
+import 'package:doma/screens/my_orders_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,12 +6,15 @@ import 'screens/main_screen.dart';
 import 'screens/login-screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/wishlist_screen.dart';
+import 'screens/my_orders_screen.dart';
 import 'constants.dart';
 
 import 'providers/cart_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/wishlist_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/review_provider.dart';
 
 void main() {
   runApp(
@@ -22,6 +26,8 @@ void main() {
         ChangeNotifierProvider(
           create: (context) => ProductProvider()..fetchProducts(),
         ),
+        ChangeNotifierProvider(create: (context) => OrderProvider()),
+        ChangeNotifierProvider(create: (context) => ReviewProvider()),
       ],
       child: const DomaApp(),
     ),
@@ -31,7 +37,6 @@ void main() {
 class DomaApp extends StatelessWidget {
   const DomaApp({super.key});
 
-  // This helper function handles the "Double-Fetch" logic at startup
   Future<void> _initializeApp(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final cart = Provider.of<CartProvider>(context, listen: false);
@@ -40,10 +45,17 @@ class DomaApp extends StatelessWidget {
     // 1. Check if we have a token and fetch the Profile
     await auth.checkAuthStatus();
 
-    // 2. If the user is logged in, immediately fetch their backend cart
+    // 2. Session Guard
     if (auth.user != null) {
+      debugPrint("👤 User Detected: ${auth.user!.id}. Syncing data...");
+      // Fetch fresh data for the logged-in user
       await cart.fetchAndSyncCart(auth.user!.id);
       await wishlist.fetchWishlist(auth.user!.id);
+    } else {
+      debugPrint("🚪 No user detected. Clearing provider memory.");
+      // 🔥 Direct calls to clear memory so User B doesn't see User A's data
+      wishlist.clearWishlist();
+      cart.clearCartMemory(); // We will add this specific method below
     }
   }
 
@@ -96,6 +108,7 @@ class DomaApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
         '/wishlist': (context) => const WishlistScreen(),
+        '/myOrders': (context) => const OrderHistoryScreen(),
       },
     );
   }

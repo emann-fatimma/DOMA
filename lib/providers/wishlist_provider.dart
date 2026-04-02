@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/product_model.dart';
 
 class WishlistProvider with ChangeNotifier {
-  final List<Product> _wishlistItems = [];
+  List<Product> _wishlistItems = []; // 🔥 Changed to non-final to allow clearing
   final _storage = const FlutterSecureStorage();
   String? _backendWishlistId;
 
@@ -15,13 +15,24 @@ class WishlistProvider with ChangeNotifier {
     return _wishlistItems.any((p) => p.id == productId);
   }
 
+  // ✅ NEW: Explicitly clear data for Logout or Session Switch
+  void clearWishlist() {
+    _wishlistItems = [];
+    _backendWishlistId = null;
+    notifyListeners();
+    debugPrint("🧹 Wishlist Provider memory wiped.");
+  }
+
   // 1. Fetch Wishlist on Start
   Future<void> fetchWishlist(String userId) async {
     final token = await _storage.read(key: 'jwt_token');
     if (token == null) return;
 
-    // 🔥 FIX 1: Changed depth=1 to depth=2
-    // This ensures the 'images' and 'vendor' inside the product are fully populated
+    // 🔥 FIX: Wipe OLD user data immediately so it doesn't show while loading
+    _wishlistItems = [];
+    _backendWishlistId = null;
+    notifyListeners();
+
     final url = Uri.parse('https://doma-backend.onrender.com/api/wishlists?where[customer][equals]=$userId&depth=2');
 
     try {
@@ -33,22 +44,17 @@ class WishlistProvider with ChangeNotifier {
         _backendWishlistId = wishDoc['id'];
 
         final List remoteProducts = wishDoc['products'] ?? [];
-
-        // Create a temporary list to prevent UI flickering during loop
         final List<Product> loadedProducts = [];
 
         for (var pData in remoteProducts) {
-          // 🔥 FIX 2: Ensure pData is a Map (populated object) before parsing
           if (pData != null && pData is Map<String, dynamic>) {
             loadedProducts.add(Product.fromJson(pData));
           }
         }
 
-        _wishlistItems.clear();
-        _wishlistItems.addAll(loadedProducts);
-
+        _wishlistItems = loadedProducts; // Update with NEW user's data
         notifyListeners();
-        debugPrint("💖 Wishlist Loaded: ${_wishlistItems.length} items.");
+        debugPrint("💖 Wishlist Loaded for $userId: ${_wishlistItems.length} items.");
       }
     } catch (e) {
       debugPrint("❌ Wishlist Fetch Error: $e");

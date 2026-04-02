@@ -1,0 +1,162 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../providers/cart_provider.dart';
+
+class OrderProvider with ChangeNotifier {
+  final _storage = const FlutterSecureStorage();
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  // Function to place the order
+  Future<Map<String, dynamic>> placeOrder({
+    required Map<String, dynamic> shippingAddress,
+    required String paymentMethod,
+    required double tax,
+    required double shippingCost,
+    List<Map<String, dynamic>>? items, // Optional: if null, backend uses cart
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final token = await _storage.read(key: 'jwt_token');
+    final url = Uri.parse(
+        'https://doma-backend.onrender.com/api/customer/checkout');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT $token',
+        },
+        body: jsonEncode({
+          'shippingAddress': shippingAddress,
+          'paymentMethod': paymentMethod,
+          'paymentStatus': 'pending', // Default for COD
+          'tax': tax,
+          'shippingCost': shippingCost,
+          if (items != null) 'items': items,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        _isLoading = false;
+        notifyListeners();
+        return {'success': true, 'order': data['order']};
+      } else {
+        _isLoading = false;
+        notifyListeners();
+        return {
+          'success': false,
+          'message': data['error'] ?? 'Checkout failed'
+        };
+      }
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
+  // Add this to your OrderProvider class
+  List<Map<String, dynamic>> _userOrders = [];
+
+  List<Map<String, dynamic>> get userOrders => _userOrders;
+
+  Future<void> fetchUserOrders(String userId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final token = await _storage.read(key: 'jwt_token');
+
+    // 🔥 1. Use the CUSTOM route path (Notice the /user/ prefix)
+    // Check your folder structure: if the folder is 'orders/user/[userId]',
+    // the URL should look like this:
+    final url = Uri.parse(
+        'https://doma-backend.onrender.com/api/orders/user/$userId?depth=2'
+    );
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          // 🔥 2. MUST BE 'JWT' (The route.ts explicitly checks: scheme !== "JWT")
+          'Authorization': 'JWT $token',
+        },
+      );
+
+      debugPrint("📡 Fetching from CUSTOM route: $url");
+      debugPrint("📡 Status: ${response.statusCode}");
+      debugPrint("📡 Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // 🔥 3. The route returns { success: true, docs: [...] }
+        if (data['success'] == true) {
+          _userOrders = List<Map<String, dynamic>>.from(data['docs']);
+          debugPrint("📦 CUSTOM ROUTE SUCCESS! Orders: ${_userOrders.length}");
+        }
+      } else {
+        debugPrint("❌ Route Error: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("❌ Connection Error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> cancelOrder(String orderId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final token = await _storage.read(key: 'jwt_token');
+
+    // Ensure this URL matches your backend folder structure exactly!
+    final url = Uri.parse('https://doma-backend.onrender.com/api/orders/cancel/$orderId');
+
+    try {
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT $token', // Matches your route.ts JWT scheme
+        },
+      );
+
+      debugPrint("📡 Cancel Status: ${response.statusCode}");
+      debugPrint("📡 Cancel Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        // Update the local list so the UI reflects 'canceled' immediately
+        final index = _userOrders.indexWhere((order) => order['id'] == orderId);
+        if (index != -1) {
+          _userOrders[index]['orderStatus'] = 'canceled';
+        }
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        debugPrint("❌ Cancellation Failed: ${data['error']}");
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint("❌ Connection Error during cancellation: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+}

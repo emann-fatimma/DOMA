@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../constants.dart';
 import '../screens/signup_screen.dart';
+import '../providers/cart_provider.dart';
+import '../providers/wishlist_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final wishlist = Provider.of<WishlistProvider>(context, listen: false);
 
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,6 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
     bool success = await auth.login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
+      cart: cart,
+      wishlist: wishlist,
     );
 
     if (success) {

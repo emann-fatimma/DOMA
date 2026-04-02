@@ -1,18 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart'; // 🔥 Added for picking images
 import '../constants.dart';
 import '../providers/auth_provider.dart';
 import '../screens/edit_profile.dart';
-import '../screens/wishlist_screen.dart';
+import '../screens/my_orders_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+  // Inside _ProfileScreenState
+  @override
+  void initState() {
+    super.initState();
+    // 🔥 Force a refresh of the user data from the server
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().fetchProfile();
+    });
+  }
+
+  final ImagePicker _picker = ImagePicker();
+
+  // 🔥 FUNCTION TO PICK AND UPLOAD IMAGE
+  Future<void> _handleImageUpload() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512, // Resize for faster upload
+      imageQuality: 75,
+    );
+
+    if (image != null) {
+      // Show Loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final auth = context.read<AuthProvider>();
+      final result = await auth.updateProfilePicture(image);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Hide Loading
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: result['success'] ? Colors.green : Colors.red,
+        ),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    // Listen to the AuthProvider
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+
+    // Get the avatar URL from the user object (Depth 1 from profile endpoint)
+    String? avatarUrl;
+    if (user?.avatar != null && user?.avatar is Map) {
+      avatarUrl = user?.avatar['url'];
+
+      // If the URL is relative, attach your backend base URL
+      if (avatarUrl != null && !avatarUrl.startsWith('http')) {
+        avatarUrl = "https://doma-backend.onrender.com$avatarUrl";
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
@@ -32,10 +92,35 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 30, top: 10),
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 50, color: AppColors.primaryGreen),
+                  // 🔥 UPDATED AVATAR SECTION
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 55,
+                        backgroundColor: Colors.white,
+                        backgroundImage: avatarUrl != null
+                            ? NetworkImage(avatarUrl)
+                            : null,
+                        child: avatarUrl == null
+                            ? const Icon(Icons.person, size: 60, color: AppColors.primaryGreen)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: _handleImageUpload,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: AppColors.accentOrange,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 15),
                   Text(
@@ -55,7 +140,6 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Profile Management
                   _buildProfileOption(
                     Icons.edit_note_rounded,
                     "Edit Profile Details",
@@ -66,16 +150,26 @@ class ProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildProfileOption(Icons.shopping_bag_outlined, "My Orders"),
-                  _buildProfileOption(Icons.favorite_border,
+                  _buildProfileOption(
+                    Icons.shopping_bag_outlined,
+                    "My Orders",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
+                      );
+                    },
+                  ),
+                  _buildProfileOption(
+                    Icons.favorite_border,
                     "Wishlist",
                     onTap: () {
                       Navigator.pushNamed(context, '/wishlist');
-                    },),
+                    },
+                  ),
 
                   const Divider(height: 30),
 
-                  // Dynamic Addresses Section
                   const Padding(
                     padding: EdgeInsets.only(left: 15, bottom: 10),
                     child: Text(
@@ -84,7 +178,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Show list of addresses if they exist
                   if (user != null && user.addresses.isNotEmpty)
                     ...user.addresses.map((addr) => Card(
                       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -105,7 +198,6 @@ class ProfileScreen extends StatelessWidget {
 
                   const Divider(height: 30),
 
-                  // Settings & Logout
                   _buildProfileOption(Icons.settings_outlined, "Settings"),
                   _buildProfileOption(Icons.help_outline, "Help & Support"),
                   _buildProfileOption(

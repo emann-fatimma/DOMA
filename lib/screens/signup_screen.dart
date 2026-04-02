@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../constants.dart';
+import '../providers/cart_provider.dart';
+import '../providers/wishlist_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -47,8 +49,16 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     // 2. Call Register in AuthProvider
-    final errorMessage = await context.read<AuthProvider>().register(name, email, pass);
+    final cartProvider = context.read<CartProvider>();
+    final wishlistProvider = context.read<WishlistProvider>();
 
+    final errorMessage = await context.read<AuthProvider>().register(
+      name,
+      email,
+      pass,
+      cart: cartProvider,       // 🔥 Added this
+      wishlist: wishlistProvider, // 🔥 Added this
+    );
     if (errorMessage == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

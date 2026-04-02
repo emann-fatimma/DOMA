@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 import '../models/user-model.dart';
+import 'cart_provider.dart';
+import 'wishlist_provider.dart';
 
 class AuthProvider with ChangeNotifier {
   UserModel? _user;
@@ -12,7 +16,11 @@ class AuthProvider with ChangeNotifier {
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(
+      String email,
+      String password,
+      {required CartProvider cart, required WishlistProvider wishlist}
+      ) async {
     _isLoading = true;
     notifyListeners();
 
@@ -29,9 +37,14 @@ class AuthProvider with ChangeNotifier {
         final token = data['token'];
         await _storage.write(key: 'jwt_token', value: token);
 
-        // --- THE TRICK: IMMEDIATELY FETCH FULL PROFILE ---
-        // This fills in the missing 'addresses' that login forgot
+        // Fetch Profile First
         await fetchProfile();
+
+        // 🔥 THE FIX: Trigger Cart and Wishlist sync IMMEDIATELY
+        if (_user != null) {
+          await cart.fetchAndSyncCart(_user!.id);
+          await wishlist.fetchWishlist(_user!.id);
+        }
 
         _isLoading = false;
         notifyListeners();
@@ -55,15 +68,15 @@ class AuthProvider with ChangeNotifier {
         Uri.parse('https://doma-backend.onrender.com/api/customer/profile'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'JWT $token', // Your backend logic needs this "JWT " prefix
+          'Authorization': 'JWT $token',
         },
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          // Update the existing _user with fresh data from the 'customer' key
-          _user = UserModel.fromJson(data, token);
+        if (data['success'] == true && data['customer'] != null) {
+          // 🔥 FIX: Pass data['customer'], NOT the whole 'data'
+          _user = UserModel.fromJson(data['customer'], token!);
           notifyListeners();
         }
       }
@@ -71,7 +84,6 @@ class AuthProvider with ChangeNotifier {
       debugPrint("Profile fetch error: $e");
     }
   }
-
   Future<bool> updateFullProfile({
     required String name,
     required String phone,
@@ -118,16 +130,21 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> register(String name, String email, String password) async {
+  Future<String?> register(
+      String name,
+      String email,
+      String password,
+      {required CartProvider cart, required WishlistProvider wishlist}
+      ) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final response = await http.post(
-        Uri.parse('https://doma-backend.onrender.com/api/customer/register'), // Make sure this matches your route path
+        Uri.parse('https://doma-backend.onrender.com/api/customer/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'Name': name, // Capital 'N' as per your backend
+          'Name': name,
           'email': email,
           'password': password,
         }),
@@ -136,16 +153,20 @@ class AuthProvider with ChangeNotifier {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201 && data['success'] == true) {
-        // Success! Save the token and user data immediately
         final token = data['token'];
         await _storage.write(key: 'jwt_token', value: token);
 
-        // Use our existing model to parse the user
         _user = UserModel.fromJson(data, token);
+
+        // 🔥 THE FIX: Fetch for new user immediately
+        if (_user != null) {
+          await cart.fetchAndSyncCart(_user!.id);
+          await wishlist.fetchWishlist(_user!.id);
+        }
 
         _isLoading = false;
         notifyListeners();
-        return null; // Return null for no error
+        return null;
       } else {
         _isLoading = false;
         notifyListeners();
@@ -189,6 +210,62 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       print("Fetch cart error: $e");
+    }
+  }
+
+// Inside AuthProvider class
+  Future<Map<String, dynamic>> updateProfilePicture(XFile pickedFile) async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return {'success': false, 'message': 'Not logged in'};
+
+    try {
+      // --- STEP 1: UPLOAD FILE TO MEDIA ---
+      var uri = Uri.parse('https://doma-backend.onrender.com/api/upload/media');
+      var request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'JWT $token'
+        ..files.add(await http.MultipartFile.fromPath(
+          'file',
+          pickedFile.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      var uploadData = jsonDecode(response.body);
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {'success': false, 'message': 'Upload failed'};
+      }
+
+      // The ID returned by your media upload route
+      final String mediaId = uploadData['media']?['id']?.toString() ?? "";
+      final profileUrl = Uri.parse('https://doma-backend.onrender.com/api/customer/profile');
+      final profileResponse = await http.put(
+        profileUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT $token',
+        },
+        body: jsonEncode({
+          'avatar': mediaId,
+        }),
+      );
+
+      if (profileResponse.statusCode == 200) {
+        final updatedData = jsonDecode(profileResponse.body);
+
+        // 🔥 CRITICAL: Update the local user object so the UI changes instantly
+        if (updatedData['customer'] != null) {
+          _user = UserModel.fromJson(updatedData['customer'], token!);
+          notifyListeners();
+        }
+
+        return {'success': true, 'message': 'Profile picture updated!'};
+      } else {
+        return {'success': false, 'message': 'Failed to link profile picture'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
     }
   }
 

@@ -38,10 +38,12 @@ class Address {
 class UserModel {
   final String id, email, name, phone, status;
   final List<Address> addresses; // Added this
+  final dynamic avatar;
 
   UserModel({
     required this.id, required this.email, required this.name,
     required this.phone, required this.status, required this.addresses,
+    this.avatar,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json, String token) {
@@ -62,6 +64,7 @@ class UserModel {
       name: userData['Name'] ?? '',
       phone: userData['phone'] ?? '',
       status: userData['status'] ?? '',
+      avatar: json['avatar'],
       addresses: addressList, // This is now guaranteed to be a List, never null
     );
   }
