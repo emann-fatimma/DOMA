@@ -7,6 +7,7 @@ import '../providers/wishlist_provider.dart';
 import 'rate_review_screen.dart';
 import '../providers/review_provider.dart';
 import 'vendor_store_screen.dart';
+import '../widgets/recommended_products_section.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -142,7 +143,11 @@ class ProductDetailScreen extends StatelessWidget {
                           }).toList(),
                         );
                       },
+
                     ),
+                    const SizedBox(height: 120),
+                    RecommendedProductsSection(currentProduct: product),
+
                     const SizedBox(height: 120),
                   ],
                 ),

@@ -34,6 +34,8 @@ class ProductProvider with ChangeNotifier {
   // Check if any filter is active (for the orange badge)
   bool get isFilterActive => _showAvailableOnly || _minPrice > 0 || _maxPrice < absoluteMaxPrice;
 
+  List<Product> get products => _allProducts;
+
   // 1. FEATURED PRODUCTS
   List<Product> get featuredProducts {
     return _allProducts.where((p) => p.isFeatured).toList();

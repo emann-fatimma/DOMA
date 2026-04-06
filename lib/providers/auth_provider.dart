@@ -269,6 +269,38 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle(
+      String token,
+      Map<String, dynamic> userData,
+      {required CartProvider cart, required WishlistProvider wishlist}
+      ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // 1. Save token to secure storage
+      await _storage.write(key: 'jwt_token', value: token);
+
+      // 2. Fetch full profile from backend (same as normal login)
+      await fetchProfile();
+
+      // 3. Sync cart and wishlist
+      if (_user != null) {
+        await cart.fetchAndSyncCart(_user!.id);
+        await wishlist.fetchWishlist(_user!.id);
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint("Google login error: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void logout() async {
     _user = null;
     await _storage.delete(key: 'jwt_token');

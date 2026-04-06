@@ -5,6 +5,7 @@ import '../constants.dart';
 import '../screens/signup_screen.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
+import '../services/authService.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -130,9 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Integrate Google Auth
-                  },
+                  onPressed: () => signInWithGoogle(context),
                   icon: const Icon(Icons.login, color: Colors.red),
                   label: const Text("Continue with Google"),
                   style: OutlinedButton.styleFrom(

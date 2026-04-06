@@ -104,6 +104,7 @@ class DomaApp extends StatelessWidget {
       ),
 
       routes: {
+        '/home': (context) => const MainScreen(),
         '/main': (context) => const MainScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
