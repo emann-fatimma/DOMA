@@ -19,39 +19,61 @@ final GoogleSignIn _googleSignIn = GoogleSignIn(
 );
 
 Future<void> signInWithGoogle(BuildContext context) async {
+  // ✅ Show loading snackbar immediately
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Row(
+        children: [
+          SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(width: 16),
+          Text("Signing in with Google..."),
+        ],
+      ),
+      duration: Duration(seconds: 30), // long duration, we'll dismiss it manually
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+
   try {
     print("Attempting Google Sign-In...");
 
-    // 1. Show the Google Account Picker
+    await _googleSignIn.signOut();
+
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
     if (googleUser == null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // ✅ Dismiss on cancel
       print("User cancelled the Google Sign-In picker.");
       return;
     }
 
-    // 2. Obtain the auth details (the idToken)
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
     final String? idToken = googleAuth.idToken;
 
-    // Debug check: If this prints null, your SHA-1 or ClientID is wrong
     print("Generated idToken: $idToken");
 
     if (idToken != null) {
       print("Sending token to Render backend...");
 
-      // 3. Send to your Render Backend
       final response = await http.post(
         Uri.parse('https://doma-backend.onrender.com/api/customer/google-login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'idToken': idToken}),
       );
 
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // ✅ Dismiss loader
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("Backend Login Success! JWT: ${data['token']}");
 
-        // ✅ Save token + fetch profile + sync cart & wishlist
         final auth = Provider.of<AuthProvider>(context, listen: false);
         final cart = Provider.of<CartProvider>(context, listen: false);
         final wishlist = Provider.of<WishlistProvider>(context, listen: false);
@@ -64,19 +86,48 @@ Future<void> signInWithGoogle(BuildContext context) async {
         );
 
         if (success && context.mounted) {
+          // ✅ Show success snackbar briefly before navigating
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text("Signed in successfully!"),
+                ],
+              ),
+              duration: Duration(seconds: 1),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          await Future.delayed(const Duration(seconds: 1)); // let snackbar show
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
         print("Backend Error (${response.statusCode}): ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Google Sign-In failed. Please try again."),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       print("Error: idToken was null. Check your SHA-1 fingerprints in Firebase.");
     }
   } catch (error) {
-    // This will now catch and print the specific ApiException code (like 10 or 12500)
+    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // ✅ Dismiss on error
     print("Google Sign-In Exception: $error");
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error: $error")),
+      SnackBar(
+        content: Text("Error: $error"),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }
