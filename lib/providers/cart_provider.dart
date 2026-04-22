@@ -69,6 +69,8 @@ class CartProvider with ChangeNotifier {
 
     try {
       final response = await http.get(url, headers: {'Authorization': 'JWT $token'});
+      debugPrint("🛒 Cart status: ${response.statusCode}");
+      debugPrint("🛒 Cart body: ${response.body}");
       final data = jsonDecode(response.body);
 
       if (data['docs'] != null && data['docs'].isNotEmpty) {
@@ -101,15 +103,16 @@ class CartProvider with ChangeNotifier {
   }
   // 2. The Sync Logic - Pushes local state to Payload
   Future<void> _syncToBackend() async {
+    debugPrint("🛒 Sync called - cartId: $_backendCartId");
     if (_backendCartId == null) return;
 
     final token = await _storage.read(key: 'jwt_token');
-    final url = Uri.parse('https://doma-backend.onrender.com/api/carts/$_backendCartId');
+    debugPrint("🔑 Token: $token");
 
-    // 🔥 CRITICAL: Ensure .id is a String and not being sent as a Map
+    final url = Uri.parse('https://doma-backend.onrender.com/api/carts/$_backendCartId');
     final body = {
       'items': _items.values.map((item) => {
-        'product': item.product.id.toString(), // Force String
+        'product': item.product.id.toString(),
         'quantity': item.quantity,
       }).toList(),
     };
@@ -124,12 +127,12 @@ class CartProvider with ChangeNotifier {
         body: jsonEncode(body),
       );
 
-      // ... rest of your logic
+      debugPrint("🛒 Sync response: ${response.statusCode}");
+      debugPrint("🛒 Sync body: ${response.body}"); // ← this will tell us exactly why
     } catch (e) {
       print("Sync Error: $e");
     }
-  }// Helper to map backend JSON back into your Product-based CartItems
-  void _updateLocalItemsFromBackend(List backendItems) {
+  }  void _updateLocalItemsFromBackend(List backendItems) {
     for (var item in backendItems) {
       final String pId = item['product']['id'] ?? item['product'];
       if (_items.containsKey(pId)) {

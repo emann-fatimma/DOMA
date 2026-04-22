@@ -8,6 +8,8 @@ import 'rate_review_screen.dart';
 import '../providers/review_provider.dart';
 import 'vendor_store_screen.dart';
 import '../widgets/recommended_products_section.dart';
+import '../providers/order_provider.dart';
+import '../providers/auth_provider.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -20,8 +22,14 @@ class ProductDetailScreen extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ReviewProvider>(context, listen: false)
           .fetchReviewsForProduct(product.id);
-    });
 
+      // ✅ Fetch orders so we can check purchase history
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      if (auth.user != null) {
+        Provider.of<OrderProvider>(context, listen: false)
+            .fetchUserOrders(auth.user!.id);
+      }
+    });
     final wishlist = context.watch<WishlistProvider>();
     final size = MediaQuery.of(context).size;
     final bool isSaved = wishlist.isFavorite(product.id);
@@ -254,69 +262,113 @@ class ProductDetailScreen extends StatelessWidget {
           "Ratings & Reviews",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
         ),
-        TextButton(
-          onPressed: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RateReviewScreen(
-                  productId: product.id,
-                  productTitle: product.name,
+        Consumer<OrderProvider>(
+          builder: (context, orderProvider, child) {
+            final hasPurchased = orderProvider.hasPurchasedProduct(product.id);
+            return TextButton(
+              onPressed: () async {
+                if (!hasPurchased) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("You can only review products you have purchased."),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RateReviewScreen(
+                      productId: product.id,
+                      productTitle: product.name,
+                    ),
+                  ),
+                );
+                if (context.mounted) {
+                  Provider.of<ReviewProvider>(context, listen: false)
+                      .fetchReviewsForProduct(product.id);
+                }
+              },
+              child: Text(
+                "Write a Review",
+                style: TextStyle(
+                  color: hasPurchased ? AppColors.accentOrange : Colors.grey,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             );
-            if (context.mounted) {
-              Provider.of<ReviewProvider>(context, listen: false)
-                  .fetchReviewsForProduct(product.id);
-            }
           },
-          child: const Text(
-            "Write a Review",
-            style: TextStyle(color: AppColors.accentOrange, fontWeight: FontWeight.bold),
-          ),
         ),
       ],
     );
   }
 
   Widget _buildRatingSummary(Product product) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundOffWhite,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Column(
+    return Consumer<ReviewProvider>(
+      builder: (context, revProvider, child) {
+        final reviews = revProvider.productReviews;
+        final total = reviews.length;
+
+        // ✅ Count how many reviews per star rating
+        Map<int, int> counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+        for (var review in reviews) {
+          final rating = (review['rating'] as num?)?.toInt() ?? 0;
+          if (counts.containsKey(rating)) counts[rating] = counts[rating]! + 1;
+        }
+
+        // ✅ Calculate average from actual reviews
+        double avgRating = 0;
+        if (total > 0) {
+          final sum = counts.entries.fold(0, (acc, e) => acc + e.key * e.value);
+          avgRating = sum / total;
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundOffWhite,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
             children: [
-              Text(product.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
-              Row(
-                children: List.generate(5, (i) => Icon(
-                    i < product.rating.floor() ? Icons.star : Icons.star_border,
-                    color: AppColors.accentOrange, size: 14)),
+              Column(
+                children: [
+                  Text(
+                    total > 0 ? avgRating.toStringAsFixed(1) : "0.0",
+                    style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    children: List.generate(5, (i) => Icon(
+                      i < avgRating.floor() ? Icons.star : Icons.star_border,
+                      color: AppColors.accentOrange,
+                      size: 14,
+                    )),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "$total Reviews",
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
               ),
-              const SizedBox(height: 5),
-              Text("${product.reviewCount} Reviews", style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              const SizedBox(width: 25),
+              Expanded(
+                child: Column(
+                  children: [5, 4, 3, 2, 1].map((star) {
+                    // ✅ Calculate bar value dynamically
+                    final double val = total > 0 ? (counts[star]! / total) : 0.0;
+                    return _buildStatBar(star, val);
+                  }).toList(),
+                ),
+              ),
             ],
           ),
-          const SizedBox(width: 25),
-          Expanded(
-            child: Column(
-              children: [
-                _buildStatBar(5, 0.8),
-                _buildStatBar(4, 0.15),
-                _buildStatBar(3, 0.05),
-                _buildStatBar(2, 0.0),
-                _buildStatBar(1, 0.0),
-              ],
-            ),
-          )
-        ],
-      ),
+        );
+      },
     );
   }
-
   Widget _buildStatBar(int star, double val) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),

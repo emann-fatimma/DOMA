@@ -159,4 +159,22 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
+  bool hasPurchasedProduct(String productId) {
+    for (var order in _userOrders) {
+      // Only count delivered or completed orders
+      final status = order['orderStatus']?.toString() ?? '';
+      if (status == 'canceled') continue;
+
+      final items = order['items'] as List? ?? [];
+      for (var item in items) {
+        final product = item['product'];
+        final String? id = product is Map
+            ? product['id']?.toString()
+            : product?.toString();
+        if (id == productId) return true;
+      }
+    }
+    return false;
+  }
+
 }

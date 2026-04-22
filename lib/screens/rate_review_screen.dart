@@ -33,13 +33,25 @@ class _RateReviewScreenState extends State<RateReviewScreen> {
             children: [
               Text("Reviewing ${widget.productTitle}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 30),
-              RatingBar.builder(
-                initialRating: 5,
-                minRating: 1,
-                itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
-                onRatingUpdate: (val) => setState(() => _rating = val),
+              KeyedSubtree(
+                key: ValueKey(_rating),
+                child: RatingBar.builder(
+                  initialRating: _rating,
+                  minRating: 1,
+                  itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
+                  onRatingUpdate: (val) => setState(() => _rating = val),
+                ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 8),
+              Text(
+                "$_rating / 5",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+              const SizedBox(height: 22),
               TextFormField(
                 controller: _descController,
                 maxLines: 5,
