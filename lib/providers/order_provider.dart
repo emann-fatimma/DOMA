@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../providers/cart_provider.dart';
+import 'package:url_launcher/url_launcher.dart'; // Ensure you import this
 
 class OrderProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
@@ -52,8 +53,8 @@ class OrderProvider with ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         return {
-          'success': false,
-          'message': data['error'] ?? 'Checkout failed'
+          'success': true,
+          'message': data['error'] ?? 'Checkout failed',
         };
       }
     } catch (e) {
@@ -177,4 +178,39 @@ class OrderProvider with ChangeNotifier {
     return false;
   }
 
+  Future<Map<String, dynamic>> initiateSafepayPayment({
+    required String orderId,
+    required double amount,
+  }) async {
+    // 1. Define your base URL
+    final String baseUrl = 'https://doma-backend.onrender.com';
+
+    // 2. Retrieve your token securely (Assuming you use FlutterSecureStorage)
+    final String? token = await _storage.read(key: 'jwt_token');
+
+    if (token == null) {
+      throw Exception("User not authenticated");
+    }
+
+    // 3. Make the request with defined variables
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/payments/safepay/initiate'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'JWT $token',
+      },
+      body: jsonEncode({
+        'orderId': orderId,
+        'amount': amount,
+        'currency': 'PKR',
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return {'success': true, ...data};
+    } else {
+      throw Exception('Failed to initiate payment: ${response.body}');
+    }
+  }
 }

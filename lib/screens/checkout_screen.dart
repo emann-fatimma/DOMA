@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants.dart';
 import '../providers/cart_provider.dart';
 import '../providers/order_provider.dart';
@@ -16,11 +17,8 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-
-  // UI State for selected payment method
   String _selectedPaymentMethod = 'COD';
 
-  // Text Controllers for the form
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
@@ -32,12 +30,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final user = auth.user;
-
       if (user != null) {
         setState(() {
           _nameController.text = user.name;
           _phoneController.text = user.phone ?? "";
-
           if (user.addresses.isNotEmpty) {
             final defaultAddr = user.addresses.firstWhere(
                   (addr) => addr.isDefault,
@@ -63,11 +59,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-
-    // --- Calculations for Backend & UI ---
     double subtotal = cartProvider.totalAmount;
-    double shippingCost = 250.0; // Fixed delivery fee for furniture
-    double tax = subtotal * 0.05; // 5% GST
+    double shippingCost = 250.0;
+    double tax = subtotal * 0.05;
     double totalAmount = subtotal + shippingCost + tax;
 
     return Scaffold(
@@ -185,7 +179,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const Divider(height: 1),
                     RadioListTile<String>(
                       title: const Text("Credit / Debit Card", style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: const Text("Pay securely online", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      subtitle: const Text("Pay securely via Safepay", style: TextStyle(fontSize: 12, color: Colors.grey)),
                       activeColor: AppColors.accentOrange,
                       value: 'CARD',
                       groupValue: _selectedPaymentMethod,
@@ -216,7 +210,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               _buildPriceRow("Tax (5%)", "Rs. ${tax.toStringAsFixed(2)}"),
               const Divider(),
               _buildPriceRow("Total Amount", "Rs. ${totalAmount.toStringAsFixed(2)}", isTotal: true),
-
               const SizedBox(height: 15),
               SizedBox(
                 width: double.infinity,
@@ -227,73 +220,136 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                     elevation: 2,
                   ),
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                    if (_formKey.currentState!.validate()) {
-                      final cart = Provider.of<CartProvider>(context, listen: false);
-                      final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+                  onPressed: _isLoading ? null : () async {
+                    if (!_formKey.currentState!.validate()) return;
 
-                      final shippingData = {
-                        'firstName': _nameController.text.split(' ').first,
-                        'lastName': _nameController.text.contains(' ') ? _nameController.text.split(' ').last : '',
-                        'street': _addressController.text,
-                        'city': _cityController.text,
-                        'state': 'Punjab',
-                        'country': 'Pakistan',
-                        'phone': _phoneController.text,
-                      };
+                    setState(() => _isLoading = true);
 
-                      setState(() => _isLoading = true);
+                    final cart = Provider.of<CartProvider>(context, listen: false);
+                    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
 
-                      final result = await orderProvider.placeOrder(
-                        shippingAddress: shippingData,
-                        paymentMethod: _selectedPaymentMethod.toLowerCase(),
-                        // Sending these ensures your Orders collection is perfectly filled
-                        tax: tax,
-                        shippingCost: shippingCost,
-                      );
+                    final shippingData = {
+                      'firstName': _nameController.text.split(' ').first,
+                      'lastName': _nameController.text.contains(' ') ? _nameController.text.split(' ').last : '',
+                      'street': _addressController.text,
+                      'city': _cityController.text,
+                      'state': 'Punjab',
+                      'country': 'Pakistan',
+                      'phone': _phoneController.text,
+                    };
 
-                      setState(() => _isLoading = false);
+                    final result = await orderProvider.placeOrder(
+                      shippingAddress: shippingData,
+                      paymentMethod: _selectedPaymentMethod.toLowerCase(),
+                      tax: tax,
+                      shippingCost: shippingCost,
+                    );
 
-                      if (result['success']) {
-                        cart.clearCartMemory();
-                        // Refresh stock for DOMA products immediately
-                        await Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+                    if (result['success']) {
+                      final orderData = result['order'];
+                      final orderId = orderData['id'] ?? orderData['orderNumber'];
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                      if (_selectedPaymentMethod == 'CARD') {
+                        // --- SAFEPAY FLOW ---
+                        try {
+                          final paymentResult = await orderProvider.initiateSafepayPayment(
+                            orderId: orderId.toString(),
+                            amount: totalAmount,
+                          );
+
+                          if (paymentResult['success'] == true) {
+                            final checkoutUrl = paymentResult['checkoutUrl'];
+                            final uri = Uri.parse(checkoutUrl);
+
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+
+                            cart.clearCartMemory();
+                            setState(() => _isLoading = false);
+
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
                                     children: [
-                                      const Text(
-                                        "Success!",
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                      ),
-                                      Text(
-                                        "Your furniture order has been placed.",
-                                        style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                                      const Icon(Icons.open_in_browser, color: Colors.white, size: 28),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text("Complete Payment", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                            Text("Finish your payment in the browser.", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
+                                  backgroundColor: AppColors.primaryGreen,
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(15),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                  duration: const Duration(seconds: 5),
                                 ),
-                              ],
-                            ),
-                            backgroundColor: AppColors.primaryGreen, // Matches your theme
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.all(15),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            duration: const Duration(seconds: 4),
-                          ),
-                        );
-                        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                              );
+                            }
+                          } else {
+                            setState(() => _isLoading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Failed to initiate payment. Please try again."), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          setState(() => _isLoading = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Payment error: $e"), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
                       } else {
+                        // --- COD FLOW ---
+                        cart.clearCartMemory();
+                        await Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+                        setState(() => _isLoading = false);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(Icons.check_circle_outline, color: Colors.white, size: 28),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text("Success!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        Text("Your order has been placed.", style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: AppColors.primaryGreen,
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.all(15),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                          Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                        }
+                      }
+                    } else {
+                      setState(() => _isLoading = false);
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(result['message'] ?? "Checkout failed"),
@@ -305,11 +361,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     }
                   },
                   child: _isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text("Place Order", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),

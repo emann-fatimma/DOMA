@@ -301,6 +301,40 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  bool get isGoogleUser => _user?.googleId != null && _user!.googleId!.isNotEmpty;
+
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return {'success': false, 'message': 'Not logged in'};
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://doma-backend.onrender.com/api/customer/change-password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'JWT $token',
+        },
+        body: jsonEncode({
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Password changed successfully'};
+      } else {
+        return {'success': false, 'message': data['error'] ?? 'Failed to change password'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Connection error: $e'};
+    }
+  }
+
   void logout() async {
     _user = null;
     await _storage.delete(key: 'jwt_token');

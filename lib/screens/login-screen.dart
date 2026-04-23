@@ -6,6 +6,7 @@ import '../screens/signup_screen.dart';
 import '../providers/cart_provider.dart';
 import '../providers/wishlist_provider.dart';
 import '../services/authService.dart';
+import '../screens/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -149,7 +150,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 child: const Text("Don't have an account? Sign Up"),
-              )
+              ),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                ),
+                child: const Text(
+                  "Forgot Password?",
+                  style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),

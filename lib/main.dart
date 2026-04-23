@@ -1,12 +1,15 @@
 import 'package:doma/screens/my_orders_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:app_links/app_links.dart';
 
 import 'screens/main_screen.dart';
 import 'screens/login-screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/wishlist_screen.dart';
 import 'screens/my_orders_screen.dart';
+import 'screens/payment/payment_cancel_screen.dart';
+import 'screens/payment/payment_success_screen.dart';
 import 'constants.dart';
 
 import 'providers/cart_provider.dart';
@@ -15,6 +18,9 @@ import 'providers/product_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/review_provider.dart';
+
+// ADD THIS — global navigator key
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(
@@ -34,34 +40,64 @@ void main() {
   );
 }
 
-class DomaApp extends StatelessWidget {
+// CHANGE to StatefulWidget to handle deep links
+class DomaApp extends StatefulWidget {
   const DomaApp({super.key});
+
+  @override
+  State<DomaApp> createState() => _DomaAppState();
+}
+
+class _DomaAppState extends State<DomaApp> {
+  final _appLinks = AppLinks();
+
+  @override
+  void initState() {
+    super.initState();
+    _handleDeepLinks();
+  }
+
+  void _handleDeepLinks() {
+    _appLinks.uriLinkStream.listen((uri) {
+      debugPrint("🔗 Deep link received: $uri");
+      if (uri.scheme != 'doma') return;
+
+      if (uri.host == 'payment') {
+        if (uri.path == '/success') {
+          final orderId = uri.queryParameters['orderId'] ?? '';
+          navigatorKey.currentState?.pushNamed(
+            '/payment-success',
+            arguments: orderId,
+          );
+        } else if (uri.path == '/cancel') {
+          navigatorKey.currentState?.pushNamed('/payment-cancel');
+        }
+      }
+    });
+  }
 
   Future<void> _initializeApp(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final cart = Provider.of<CartProvider>(context, listen: false);
     final wishlist = Provider.of<WishlistProvider>(context, listen: false);
 
-    // 1. Check if we have a token and fetch the Profile
     await auth.checkAuthStatus();
 
-    // 2. Session Guard
     if (auth.user != null) {
       debugPrint("👤 User Detected: ${auth.user!.id}. Syncing data...");
-      // Fetch fresh data for the logged-in user
       await cart.fetchAndSyncCart(auth.user!.id);
       await wishlist.fetchWishlist(auth.user!.id);
     } else {
       debugPrint("🚪 No user detected. Clearing provider memory.");
-      // 🔥 Direct calls to clear memory so User B doesn't see User A's data
       wishlist.clearWishlist();
-      cart.clearCartMemory(); // We will add this specific method below
+      cart.clearCartMemory();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,  // ADD THIS
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'DOMA - Design & Buy',
       debugShowCheckedModeBanner: false,
@@ -78,12 +114,9 @@ class DomaApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-
-      // Use FutureBuilder to handle the startup logic
       home: FutureBuilder(
         future: _initializeApp(context),
         builder: (context, snapshot) {
-          // While the app is "thinking" (checking token/cart)
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(
@@ -92,17 +125,14 @@ class DomaApp extends StatelessWidget {
             );
           }
 
-          // After initialization, check if we have a user
           final auth = Provider.of<AuthProvider>(context, listen: false);
           if (auth.user != null) {
             return const MainScreen();
           }
 
-          // If no user/token found, show Login
           return const LoginScreen();
         },
       ),
-
       routes: {
         '/home': (context) => const MainScreen(),
         '/main': (context) => const MainScreen(),
@@ -110,6 +140,11 @@ class DomaApp extends StatelessWidget {
         '/signup': (context) => const SignupScreen(),
         '/wishlist': (context) => const WishlistScreen(),
         '/myOrders': (context) => const OrderHistoryScreen(),
+        '/payment-success': (context) {
+          final orderId = ModalRoute.of(context)!.settings.arguments as String? ?? '';
+          return PaymentSuccessScreen(orderId: orderId);
+        },
+        '/payment-cancel': (context) => const PaymentCancelScreen(),
       },
     );
   }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart'; // 🔥 Added for picking images
+import 'package:image_picker/image_picker.dart';
 import '../constants.dart';
 import '../providers/auth_provider.dart';
 import '../screens/edit_profile.dart';
 import '../screens/my_orders_screen.dart';
+import '../screens/change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -167,7 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pushNamed(context, '/wishlist');
                     },
                   ),
-
+                  if (!auth.isGoogleUser)
+                    _buildProfileOption(
+                      Icons.lock_outline,
+                      "Change Password",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
+                        );
+                      },
+                    ),
                   const Divider(height: 30),
 
                   const Padding(
