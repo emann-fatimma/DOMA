@@ -43,7 +43,8 @@ class Product {
       if (vendorData is Map) {
         // If backend depth is 1+, we get the object
         vId = vendorData['id']?.toString() ?? "";
-        sName = vendorData['storeName']?.toString() ??
+        sName =
+            vendorData['storeName']?.toString() ??
             vendorData['name']?.toString() ??
             vendorData['title']?.toString() ??
             'Store Name Missing';
@@ -54,21 +55,29 @@ class Product {
     }
 
     String imgUrl = '';
-    if (json['images'] != null && json['images'] is List && (json['images'] as List).isNotEmpty) {
+    if (json['images'] != null &&
+        json['images'] is List &&
+        (json['images'] as List).isNotEmpty) {
       final firstImageEntry = json['images'][0];
 
       // Handling Payload Media structure (can be nested under 'image' or direct)
-      final imageField = firstImageEntry is Map ? firstImageEntry['image'] : null;
+      final imageField = firstImageEntry is Map
+          ? firstImageEntry['image']
+          : null;
 
       if (imageField is Map && imageField['url'] != null) {
         String rawUrl = imageField['url'];
-        imgUrl = rawUrl.startsWith('http') ? rawUrl : "https://doma-backend.onrender.com$rawUrl";
+        imgUrl = rawUrl.startsWith('http')
+            ? rawUrl
+            : "https://doma-backend.onrender.com$rawUrl";
       } else if (imageField is String) {
         imgUrl = "https://doma-backend.onrender.com/media/$imageField";
       } else if (firstImageEntry is Map && firstImageEntry['url'] != null) {
         // Direct check if 'image' key isn't used
         String rawUrl = firstImageEntry['url'];
-        imgUrl = rawUrl.startsWith('http') ? rawUrl : "https://doma-backend.onrender.com$rawUrl";
+        imgUrl = rawUrl.startsWith('http')
+            ? rawUrl
+            : "https://doma-backend.onrender.com$rawUrl";
       }
     }
 
@@ -76,9 +85,15 @@ class Product {
     try {
       final cat = json['category'];
       if (cat is Map) {
-        safeCategory = cat['title']?.toString() ?? cat['name']?.toString() ?? 'Uncategorized';
+        safeCategory =
+            cat['title']?.toString() ??
+            cat['name']?.toString() ??
+            'Uncategorized';
       } else if (cat is List && cat.isNotEmpty && cat[0] is Map) {
-        safeCategory = cat[0]['title']?.toString() ?? cat[0]['name']?.toString() ?? 'Uncategorized';
+        safeCategory =
+            cat[0]['title']?.toString() ??
+            cat[0]['name']?.toString() ??
+            'Uncategorized';
       }
     } catch (_) {}
 
@@ -94,11 +109,67 @@ class Product {
       imageUrl: imgUrl,
       isAvailable: stockCount > 0,
       rating: (ratingInfo['average'] ?? 0).toDouble(),
-      reviewCount: (ratingInfo['count'] is num) ? (ratingInfo['count'] as num).toInt() : 0,
+      reviewCount: (ratingInfo['count'] is num)
+          ? (ratingInfo['count'] as num).toInt()
+          : 0,
       storeName: sName,
       vendorId: vId,
       category: safeCategory,
       isFeatured: json['isFeatured'] ?? false,
       quantity: stockCount,
     );
-  }}
+  }
+}
+
+// ============================================================
+// RAG-specific models — used only by RagSearchScreen
+// ============================================================
+
+class RagProduct {
+  final String id;
+  final String productName;
+  final String? productUrlSlug;
+  final String? shortDescription;
+  final double? price;
+  final List<String> colors;
+  final String? category;
+  final double? score;
+
+  RagProduct({
+    required this.id,
+    required this.productName,
+    this.productUrlSlug,
+    this.shortDescription,
+    this.price,
+    this.colors = const [],
+    this.category,
+    this.score,
+  });
+
+  factory RagProduct.fromJson(Map<String, dynamic> json) {
+    final pricing = json['pricingDetails'];
+    return RagProduct(
+      id: json['id']?.toString() ?? '',
+      productName: json['productName'] ?? 'Unknown',
+      productUrlSlug: json['productUrlSlug'],
+      shortDescription: json['shortDescription'],
+      price: (pricing?['discountedPrice'] ?? pricing?['originalPrice'])
+          ?.toDouble(),
+      colors: List<String>.from(json['colors'] ?? []),
+      category: json['category'],
+      score: json['score']?.toDouble(),
+    );
+  }
+}
+
+class ChatMessage {
+  final String role; // 'user' or 'assistant'
+  final String content;
+  final List<RagProduct> products;
+
+  ChatMessage({
+    required this.role,
+    required this.content,
+    this.products = const [],
+  });
+}
