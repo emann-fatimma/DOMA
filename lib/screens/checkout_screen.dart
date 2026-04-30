@@ -262,7 +262,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             final uri = Uri.parse(checkoutUrl);
 
                             if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              await launchUrl(uri, mode: LaunchMode.inAppBrowserView,);
                             }
 
                             cart.clearCartMemory();
