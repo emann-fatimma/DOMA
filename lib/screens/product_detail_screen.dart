@@ -413,12 +413,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         Text(
           product.name,
           style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primaryGreen,
-              height: 1.2),
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: AppColors.primaryGreen,
+            height: 1.2,
+          ),
         ),
         const SizedBox(height: 10),
+
         Row(
           children: [
             const Icon(Icons.storefront_outlined,
@@ -438,8 +440,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => VendorStoreScreen(
-                          vendorId: product.vendorId,
-                          vendorName: product.storeName),
+                        vendorId: product.vendorId,
+                        vendorName: product.storeName,
+                      ),
                     ),
                   );
                 }
@@ -468,31 +471,54 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ],
         ),
+
         const SizedBox(height: 14),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            /// ✅ UPDATED PRICE BLOCK
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("Price",
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
-                Text(
-                  "Rs. ${widget.product.price}",
-                  style: const TextStyle(
+
+                if (product.hasDiscount) ...[
+                  Text(
+                    "Rs. ${product.price}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                  Text(
+                    "Rs. ${product.discountedPrice}",
+                    style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.accentOrange),
-                ),
+                      color: AppColors.accentOrange,
+                    ),
+                  ),
+                ] else
+                  Text(
+                    "Rs. ${product.price}",
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.accentOrange,
+                    ),
+                  ),
               ],
             ),
+
             _buildStockBadge(product.isAvailable),
           ],
         ),
       ],
     );
   }
-
   // ── DESCRIPTION ─────────────────────────────────────────────
   Widget _buildDescription(Product product) {
     return Column(
