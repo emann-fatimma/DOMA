@@ -40,6 +40,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   flutter_rating_bar: ^4.0.1
   image_picker: ^1.0.7
+  dotted_border: ^2.1.0  # optional, for the drop zone UI
   http_parser: ^4.0.2
   google_sign_in: ^6.2.1
   url_launcher: ^6.3.0

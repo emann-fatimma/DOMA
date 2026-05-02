@@ -405,6 +405,7 @@ import '../constants.dart';
 import '../providers/product_provider.dart';
 import '../screens/rag_search_screen.dart'; // ✅ add this import
 import 'wishlist_screen.dart';
+import '../widgets/redesign_banner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -706,6 +707,8 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const RedesignBanner(),
+
 
                   // ==========================================
                   // 2. LOADING STATE
