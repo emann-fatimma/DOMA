@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "329159977259",
+    "project_id": "doma-306d1",
+    "storage_bucket": "doma-306d1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:329159977259:android:bbac37b3da2a770af63d6e",
+        "android_client_info": {
+          "package_name": "com.example.doma"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbJxu8KKJ57UR9nSVPxA9wQhFEa2K931I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
