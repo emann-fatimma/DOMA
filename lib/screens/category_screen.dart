@@ -107,9 +107,10 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../constants.dart';
-import 'category_products_screen.dart'; // ✅ Imports the new screen
+import 'category_products_screen.dart';
 
 class CategoryScreen extends StatelessWidget {
   const CategoryScreen({super.key});
@@ -119,9 +120,14 @@ class CategoryScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
-        title: const Text(
-          "All Categories",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          "CATEGORIES",
+          style: GoogleFonts.urbanist(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 5,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
       ),
@@ -145,27 +151,16 @@ class CategoryScreen extends StatelessWidget {
             return const Center(child: Text("No categories found."));
           }
 
-          return ListView.separated(
+          return ListView.builder(
             padding: const EdgeInsets.all(15),
             itemCount: categories.length,
-            separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final category = categories[index];
               final String categoryId = category['id'];
               final String categoryName = category['name'] ?? "Unknown Category";
 
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-                  child: const Icon(Icons.category_outlined, color: AppColors.primaryGreen),
-                ),
-                title: Text(
-                  categoryName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              return GestureDetector(
                 onTap: () {
-                  // ✅ PUSHES the new screen forward instead of popping backward!
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -176,6 +171,54 @@ class CategoryScreen extends StatelessWidget {
                     ),
                   );
                 },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1B4332).withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.category_outlined,
+                          color: AppColors.primaryGreen,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          categoryName,
+                          style: GoogleFonts.urbanist(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textLight,
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           );
