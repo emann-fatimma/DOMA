@@ -3,7 +3,7 @@ class Product {
   final String name;
   final String description;
   final num price;
-  final num? discountedPrice; // ✅ NEW
+  final num? discountedPrice;
   final String imageUrl;
   final List<String> imageUrls;
   final bool isAvailable;
@@ -14,6 +14,8 @@ class Product {
   final bool isFeatured;
   final int quantity;
   final String vendorId;
+  final String? model3dUrl;
+  final String? model3dStatus;
 
   Product({
     required this.id,
@@ -31,14 +33,18 @@ class Product {
     required this.isFeatured,
     required this.quantity,
     required this.vendorId,
+    this.model3dUrl,
+    this.model3dStatus,
   });
 
   /// ✅ Use this everywhere in UI instead of `price`
   num get effectivePrice => discountedPrice ?? price;
 
   /// ✅ Helpful for showing badges like "SALE"
-  bool get hasDiscount =>
-      discountedPrice != null && discountedPrice! < price;
+  bool get hasDiscount => discountedPrice != null && discountedPrice! < price;
+
+  bool get has3DModel =>
+      model3dStatus == 'ready' && model3dUrl != null && model3dUrl!.isNotEmpty;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     final pricing = json['pricing'] ?? {};
@@ -53,9 +59,9 @@ class Product {
         vId = vendorData['id']?.toString() ?? "";
         sName =
             vendorData['storeName']?.toString() ??
-                vendorData['name']?.toString() ??
-                vendorData['title']?.toString() ??
-                'Store Name Missing';
+            vendorData['name']?.toString() ??
+            vendorData['title']?.toString() ??
+            'Store Name Missing';
       } else {
         vId = vendorData.toString();
       }
@@ -92,13 +98,13 @@ class Product {
       if (cat is Map) {
         safeCategory =
             cat['title']?.toString() ??
-                cat['name']?.toString() ??
-                'Uncategorized';
+            cat['name']?.toString() ??
+            'Uncategorized';
       } else if (cat is List && cat.isNotEmpty && cat[0] is Map) {
         safeCategory =
             cat[0]['title']?.toString() ??
-                cat[0]['name']?.toString() ??
-                'Uncategorized';
+            cat[0]['name']?.toString() ??
+            'Uncategorized';
       }
     } catch (_) {}
 
@@ -129,6 +135,8 @@ class Product {
       category: safeCategory,
       isFeatured: json['isFeatured'] ?? false,
       quantity: stockCount,
+      model3dUrl: json['model3dUrl']?.toString(),
+      model3dStatus: json['model3dStatus']?.toString(),
     );
   }
 }
