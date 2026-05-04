@@ -1,5 +1,5 @@
-import 'package:doma/screens/my_orders_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:app_links/app_links.dart';
 
@@ -107,11 +107,71 @@ class _DomaAppState extends State<DomaApp> {
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primaryGreen,
           secondary: AppColors.accentOrange,
+          surface: AppColors.backgroundOffWhite,
         ),
-        appBarTheme: const AppBarTheme(
+        textTheme: GoogleFonts.urbanistTextTheme().copyWith(
+          displayLarge: GoogleFonts.urbanist(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 8, color: AppColors.textDark),
+          headlineLarge: GoogleFonts.urbanist(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.textDark),
+          headlineMedium: GoogleFonts.urbanist(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+          titleLarge: GoogleFonts.urbanist(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+          titleMedium: GoogleFonts.urbanist(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark),
+          bodyLarge: GoogleFonts.cormorantGaramond(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textMid),
+          bodyMedium: GoogleFonts.cormorantGaramond(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.textMid),
+          labelLarge: GoogleFonts.urbanist(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white),
+        ),
+        appBarTheme: AppBarTheme(
           backgroundColor: AppColors.primaryGreen,
           foregroundColor: Colors.white,
           elevation: 0,
+          centerTitle: true,
+          titleTextStyle: GoogleFonts.urbanist(
+            fontSize: 15, fontWeight: FontWeight.w900,
+            letterSpacing: 5, color: Colors.white,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryGreen,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(50),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            textStyle: GoogleFonts.urbanist(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2),
+            elevation: 0,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.primaryGreen.withOpacity(0.10)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.primaryGreen.withOpacity(0.10)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+          ),
+          labelStyle: GoogleFonts.urbanist(
+            fontSize: 10, fontWeight: FontWeight.w700,
+            letterSpacing: 2, color: AppColors.primaryGreen,
+          ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.accentOrange,
+          unselectedItemColor: AppColors.primaryGreen.withOpacity(0.5),
+          selectedLabelStyle: GoogleFonts.urbanist(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+          unselectedLabelStyle: GoogleFonts.urbanist(fontSize: 10, fontWeight: FontWeight.w500),
+          type: BottomNavigationBarType.fixed,
+          elevation: 12,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       home: FutureBuilder(

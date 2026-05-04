@@ -399,12 +399,12 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../widgets/product_card.dart';
 import '../constants.dart';
 import '../providers/product_provider.dart';
-import '../screens/rag_search_screen.dart'; // ✅ add this import
-import 'wishlist_screen.dart';
+import '../screens/rag_search_screen.dart';
 import '../widgets/redesign_banner.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -572,13 +572,24 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
-        title: const Text(
-          "DOMA - Design & Buy",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          "DOMA",
+          style: GoogleFonts.urbanist(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 5,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: AppColors.primaryGreen,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/wishlist'),
+          ),
+        ],
       ),
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, child) {
@@ -597,7 +608,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        // ✅ RAG Search Bar (tappable, opens Genie)
+                        // RAG Search Bar (tappable, opens AI search)
                         Expanded(
                           child: GestureDetector(
                             onTap: () => Navigator.push(
@@ -609,12 +620,11 @@ class HomeScreen extends StatelessWidget {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(30),
+                                borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.2),
-                                    spreadRadius: 1,
-                                    blurRadius: 5,
+                                    color: const Color(0xFF1B4332).withOpacity(0.07),
+                                    blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
@@ -633,35 +643,28 @@ class HomeScreen extends StatelessWidget {
                                   const SizedBox(width: 10),
                                   Text(
                                     "Search furniture, decor...",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      fontSize: 14,
+                                    style: GoogleFonts.urbanist(
+                                      fontSize: 13,
+                                      color: AppColors.textLight,
                                     ),
                                   ),
                                   const Spacer(),
-                                  // ✅ AI badge to hint it's AI-powered
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.accentOrange.withOpacity(
-                                        0.1,
-                                      ),
+                                      color: AppColors.accentOrange.withOpacity(0.10),
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: AppColors.accentOrange
-                                            .withOpacity(0.3),
-                                      ),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'AI',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.accentOrange,
+                                      style: GoogleFonts.urbanist(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
                                         letterSpacing: 1,
+                                        color: AppColors.accentOrange,
                                       ),
                                     ),
                                   ),
@@ -741,18 +744,31 @@ class HomeScreen extends StatelessWidget {
                   else ...[
                       if (productProvider.searchQuery.isEmpty &&
                           productProvider.featuredProducts.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 15.0,
                             vertical: 5.0,
                           ),
-                          child: Text(
-                            "Featured",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryGreen,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Featured",
+                                style: GoogleFonts.urbanist(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              Text(
+                                "See All",
+                                style: GoogleFonts.urbanist(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.accentOrange,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         SizedBox(
@@ -784,10 +800,10 @@ class HomeScreen extends StatelessWidget {
                               productProvider.searchQuery.isNotEmpty
                                   ? "Search Results"
                                   : "All Products",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
+                              style: GoogleFonts.urbanist(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textDark,
                               ),
                             ),
                             DropdownButton<String>(

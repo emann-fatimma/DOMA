@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants.dart';
@@ -78,7 +79,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: Text(
+          "MY PROFILE",
+          style: GoogleFonts.urbanist(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 5,
+            color: Colors.white,
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: AppColors.primaryGreen,
@@ -97,13 +106,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Stack(
                     children: [
                       CircleAvatar(
-                        radius: 55,
-                        backgroundColor: Colors.white,
-                        backgroundImage: avatarUrl != null
-                            ? NetworkImage(avatarUrl)
-                            : null,
+                        radius: 40,
+                        backgroundColor: Colors.white.withOpacity(0.15),
+                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
                         child: avatarUrl == null
-                            ? const Icon(Icons.person, size: 60, color: AppColors.primaryGreen)
+                            ? const Icon(Icons.person, size: 44, color: Colors.white)
                             : null,
                       ),
                       Positioned(
@@ -112,25 +119,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: GestureDetector(
                           onTap: _handleImageUpload,
                           child: Container(
-                            padding: const EdgeInsets.all(8),
+                            width: 24,
+                            height: 24,
                             decoration: const BoxDecoration(
                               color: AppColors.accentOrange,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 12),
                   Text(
                     user?.name ?? "DOMA User",
-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.urbanist(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     user?.email ?? "user@doma.com",
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: GoogleFonts.cormorantGaramond(
+                      color: Colors.white.withOpacity(0.65),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -230,17 +246,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileOption(IconData icon, String title, {bool isDestructive = false, VoidCallback? onTap}) {
-    return ListTile(
-      leading: Icon(icon, color: isDestructive ? Colors.red : AppColors.primaryGreen),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: isDestructive ? Colors.red : AppColors.textDark,
+    return GestureDetector(
+      onTap: onTap ?? () {},
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1B4332).withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isDestructive
+                    ? const Color(0xFFEF4444).withOpacity(0.08)
+                    : AppColors.primaryGreen.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isDestructive ? const Color(0xFFEF4444) : AppColors.primaryGreen,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDestructive ? const Color(0xFFEF4444) : AppColors.textDark,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: AppColors.textLight,
+            ),
+          ],
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-      onTap: onTap ?? () {},
     );
   }
 }

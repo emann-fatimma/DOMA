@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../constants.dart';
@@ -40,7 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success) {
-      // Navigate to your MainScreen/HomeScreen
       Navigator.pushReplacementNamed(context, '/main');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,100 +65,214 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 50),
-              const Text(
-                "Welcome Back",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+
+              // ── Logo wordmark ──────────────────────────────────
+              Text(
+                "DOMA",
+                style: GoogleFonts.urbanist(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 8,
                   color: AppColors.primaryGreen,
                 ),
               ),
-              const Text(
-                "Login to your DOMA account",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 50),
-
-              // Email Field
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: "Email Address",
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+              Text(
+                "Design & Buy",
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textMid,
                 ),
               ),
-              const SizedBox(height: 20),
 
-              // Password Field
+              const SizedBox(height: 50),
+
+              // ── Welcome heading ────────────────────────────────
+              Text(
+                "Welcome Back",
+                style: GoogleFonts.urbanist(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Login to your DOMA account",
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textLight,
+                ),
+              ),
+
+              const SizedBox(height: 36),
+
+              // ── Email field ────────────────────────────────────
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: "EMAIL ADDRESS"),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Password field ─────────────────────────────────
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  labelText: "Password",
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  labelText: "PASSWORD",
                   suffixIcon: IconButton(
-                    icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.textLight,
+                      size: 20,
+                    ),
                     onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                 ),
               ),
-              const SizedBox(height: 40),
 
-              // Login Button
+              const SizedBox(height: 12),
+
+              // ── Forgot password ────────────────────────────────
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                  ),
+                  child: Text(
+                    "Forgot Password?",
+                    style: GoogleFonts.urbanist(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.accentOrange,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ── Login button ───────────────────────────────────
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  ),
                   child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                    "Login",
-                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : Text(
+                          "LOGIN",
+                          style: GoogleFonts.urbanist(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
 
-              // Inside LoginScreen
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Google Login Placeholder (We'll integrate this next!)
+              // ── OR divider ─────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      thickness: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "OR",
+                      style: GoogleFonts.urbanist(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      thickness: 1,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Google button ──────────────────────────────────
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: OutlinedButton.icon(
                   onPressed: () => signInWithGoogle(context),
-                  icon: const Icon(Icons.login, color: Colors.red),
-                  label: const Text("Continue with Google"),
+                  icon: const Icon(Icons.login, color: Colors.red, size: 20),
+                  label: Text(
+                    "Continue with Google",
+                    style: GoogleFonts.urbanist(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    side: const BorderSide(color: Colors.grey),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    side: BorderSide(
+                      color: AppColors.primaryGreen.withOpacity(0.15),
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
+
+              const SizedBox(height: 24),
+
+              // ── Sign up link ───────────────────────────────────
+              Center(
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SignupScreen()),
-                  );
-                },
-                child: const Text("Don't have an account? Sign Up"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                ),
-                child: const Text(
-                  "Forgot Password?",
-                  style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Don't have an account? ",
+                          style: GoogleFonts.urbanist(
+                            fontSize: 13,
+                            color: AppColors.textLight,
+                          ),
+                        ),
+                        TextSpan(
+                          text: "Sign Up",
+                          style: GoogleFonts.urbanist(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

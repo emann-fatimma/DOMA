@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../providers/cart_provider.dart';
@@ -330,7 +331,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           width: 40,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
+                            color: const Color(0xFFE0D8CC),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -410,11 +411,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           child: Text(
             product.category.toUpperCase(),
-            style: const TextStyle(
+            style: GoogleFonts.urbanist(
               color: AppColors.primaryGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-              letterSpacing: 1,
+              fontWeight: FontWeight.w700,
+              fontSize: 10,
+              letterSpacing: 1.2,
             ),
           ),
         ),
@@ -443,10 +444,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           product.name,
-          style: const TextStyle(
-            fontSize: 24,
+          style: GoogleFonts.urbanist(
+            fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: AppColors.primaryGreen,
+            color: AppColors.textDark,
             height: 1.2,
           ),
         ),
@@ -459,7 +460,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Expanded(
               child: Text(
                 "Sold by: ${product.storeName}",
-                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                style: GoogleFonts.cormorantGaramond(
+                  color: AppColors.textLight,
+                  fontSize: 13,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -1047,31 +1051,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentOrange,
+                  backgroundColor: AppColors.primaryGreen,
                   disabledBackgroundColor: Colors.grey.shade300,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.shopping_cart_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      "Add to Cart",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  "ADD TO CART",
+                  style: GoogleFonts.urbanist(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
             ),

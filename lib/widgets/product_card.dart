@@ -1,122 +1,5 @@
-// import 'package:flutter/material.dart';
-// import '../constants.dart'; // Import your hex codes
-// import '../models/product_model.dart'; // 1. IMPORT YOUR NEW MODEL
-// import '../screens/product_detail_screen.dart';
-//
-// class ProductCard extends StatelessWidget {
-//   final Product product; // 2. CHANGE TYPE FROM Map TO Product
-//
-//   const ProductCard({super.key, required this.product});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     // print("FULL IMAGE PATH IS: ${product.imageUrl}"); // ADD THIS LINE
-//     return InkWell(
-//       onTap: () {
-//         Navigator.push(
-//           context,
-//           MaterialPageRoute(
-//             builder: (context) => ProductDetailScreen(product: product),
-//           ),
-//         );
-//       },
-//       borderRadius: BorderRadius.circular(15),
-//       child: Container(
-//         decoration: BoxDecoration(
-//           color: Colors.white,
-//           borderRadius: BorderRadius.circular(15),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.grey.withOpacity(0.1),
-//               spreadRadius: 2,
-//               blurRadius: 5,
-//             ),
-//           ],
-//         ),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // 3. UPDATED PRODUCT IMAGE (Fetches from the internet)
-//             Expanded(
-//               child: ClipRRect(
-//                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-//                 child: product.imageUrl.isNotEmpty
-//                     ? Image.network(
-//                     product.imageUrl.contains('https://res.cloudinary.com')
-//                         ? product.imageUrl.split('https://doma-backend.onrender.com').last
-//                         : product.imageUrl,
-//                     fit: BoxFit.cover,
-//                   width: double.infinity,
-//                   // Shows a spinner while the image downloads from Render
-//                   loadingBuilder: (context, child, loadingProgress) {
-//                     if (loadingProgress == null) return child;
-//                     return const Center(child: CircularProgressIndicator());
-//                   },
-//                   // Shows a broken image icon if the URL fails
-//                   errorBuilder: (context, error, stackTrace) {
-//                     return const Center(child: Icon(Icons.broken_image, color: Colors.grey));
-//                   },
-//                 )
-//                     : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
-//               ),
-//             ),
-//
-//             Padding(
-//               padding: const EdgeInsets.all(8.0),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   // Note: I temporarily removed the 'category' text because
-//                   // we didn't add category to the Product dart model earlier.
-//                   // We can easily add it back later if you need it!
-//
-//                   // 4. PRODUCT NAME (Using object syntax)
-//                   Text(
-//                     product.name,
-//                     style: const TextStyle(
-//                       color: AppColors.primaryGreen,
-//                       fontWeight: FontWeight.bold,
-//                       fontSize: 14,
-//                     ),
-//                     maxLines: 1,
-//                     overflow: TextOverflow.ellipsis,
-//                   ),
-//
-//                   const SizedBox(height: 4),
-//
-//                   // 5. PRICE AND ADD BUTTON
-//                   Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Text(
-//                         "Rs. ${product.price}", // Using object syntax
-//                         style: const TextStyle(
-//                           color: AppColors.accentOrange,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
-//                       Container(
-//                         padding: const EdgeInsets.all(4),
-//                         decoration: const BoxDecoration(
-//                           color: AppColors.primaryGreen,
-//                           shape: BoxShape.circle,
-//                         ),
-//                         child: const Icon(Icons.add, color: Colors.white, size: 18),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../models/product_model.dart';
@@ -147,72 +30,108 @@ class _ProductCardState extends State<ProductCard> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 5,
+              color: const Color(0xFF1B4332).withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── IMAGE ──────────────────────────────────────────
+            // ── IMAGE AREA ──────────────────────────────────────
             Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(15),
-                ),
-                child: widget.product.imageUrl.isNotEmpty
-                    ? Image.network(
-                  widget.product.imageUrl.contains(
-                      'https://res.cloudinary.com')
-                      ? widget.product.imageUrl
-                      .split('https://doma-backend.onrender.com')
-                      .last
-                      : widget.product.imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(Icons.broken_image, color: Colors.grey),
-                    );
-                  },
-                )
-                    : const Center(
-                  child: Icon(
-                    Icons.image_not_supported,
-                    color: Colors.grey,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(14),
+                    ),
+                    child: widget.product.imageUrl.isNotEmpty
+                        ? Image.network(
+                            widget.product.imageUrl.contains('https://res.cloudinary.com')
+                                ? widget.product.imageUrl.split('https://doma-backend.onrender.com').last
+                                : widget.product.imageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: const Color(0xFFEEE8DF),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: const Color(0xFFEEE8DF),
+                                child: const Center(
+                                  child: Icon(Icons.broken_image, color: AppColors.textLight),
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEEE8DF),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.image_not_supported, color: AppColors.textLight),
+                            ),
+                          ),
                   ),
-                ),
+
+                  // Category chip overlay
+                  if (widget.product.category.isNotEmpty)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          widget.product.category.toUpperCase(),
+                          style: GoogleFonts.urbanist(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            // ── PRODUCT INFO ───────────────────────────────────
+            // ── PRODUCT INFO ─────────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product name
                   Text(
                     widget.product.name,
-                    style: const TextStyle(
-                      color: AppColors.primaryGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                    style: GoogleFonts.urbanist(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -220,12 +139,10 @@ class _ProductCardState extends State<ProductCard> {
 
                   const SizedBox(height: 4),
 
-                  // ── PRICE ROW ──────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // Prices (stacked vertically, shrinks before overflowing)
                       Flexible(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,9 +151,9 @@ class _ProductCardState extends State<ProductCard> {
                             if (widget.product.hasDiscount)
                               Text(
                                 "Rs. ${widget.product.price.toStringAsFixed(0)}",
-                                style: const TextStyle(
-                                  color: Colors.grey,
+                                style: GoogleFonts.urbanist(
                                   fontSize: 11,
+                                  color: AppColors.textLight,
                                   decoration: TextDecoration.lineThrough,
                                 ),
                               ),
@@ -244,17 +161,16 @@ class _ProductCardState extends State<ProductCard> {
                               widget.product.hasDiscount
                                   ? "Rs. ${widget.product.discountedPrice!.toStringAsFixed(0)}"
                                   : "Rs. ${widget.product.price.toStringAsFixed(0)}",
-                              style: const TextStyle(
-                                color: AppColors.accentOrange,
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.urbanist(
                                 fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.accentOrange,
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      // Heart / wishlist button
                       GestureDetector(
                         onTap: () {
                           wishlistProvider.toggleWishlist(widget.product);
@@ -262,9 +178,7 @@ class _ProductCardState extends State<ProductCard> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                isFavorite
-                                    ? "Removed from Wishlist"
-                                    : "Added to Wishlist",
+                                isFavorite ? "Removed from Wishlist" : "Added to Wishlist",
                               ),
                               duration: const Duration(seconds: 1),
                               backgroundColor: AppColors.primaryGreen,
@@ -272,9 +186,7 @@ class _ProductCardState extends State<ProductCard> {
                           );
                         },
                         child: Icon(
-                          isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: AppColors.accentOrange,
                           size: 22,
                         ),
